@@ -52,11 +52,18 @@ class GameScene extends Phaser.Scene {
     this.barLayout = {
       x:  22,
       w:  490,
-      h:  16,
-      co2Y:  58,
-      tmpY:  76,
-      qvY:   94
+      h:  14,
+      co2Y:  60,
+      tmpY:  78,
+      qvY:   96
     };
+
+    // Overlay de perigo (pisca vermelho quando temp > 1.7)
+    this.dangerOverlay = null;
+    this.dangerTween   = null;
+
+    // Guard para evitar múltiplos avanços simultâneos
+    this.avancando = false;
 
     // Build the scene
     this.criarFundo();
@@ -239,10 +246,30 @@ class GameScene extends Phaser.Scene {
     var row      = Math.floor(index / this.COLS);
     var bx       = this.GX + col * this.TILE + this.TILE / 2;
     var by       = this.GY + row * this.TILE + this.TILE / 2;
-    var buildImg = this.add.image(bx, by, s.textureKey).setDepth(5);
+    var buildImg = this.add.image(bx, by, s.textureKey).setDepth(5).setScale(0);
     this.buildingImages[index]  = buildImg;
     this.estado.grade[index]    = this.estruturaSelecionada;
     this.estado.orcamento      -= s.custo;
+
+    // Animação de entrada: bounce scale
+    this.tweens.add({
+      targets:  buildImg,
+      scale:    1.0,
+      duration: 250,
+      ease:     'Back.out'
+    });
+
+    // Texto flutuante com custo
+    var floatTxt = this.add.text(bx, by - 10, '-R$' + (s.custo/1000) + 'k', {
+      fontSize: '13px', color: '#e74c3c', fontStyle: 'bold', fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(20);
+
+    this.tweens.add({
+      targets: floatTxt, y: by - 50, alpha: 0,
+      duration: 900, ease: 'Power2',
+      onComplete: function() { floatTxt.destroy(); }
+    });
+
     this.atualizarHUD();
   }
 
@@ -462,28 +489,70 @@ class GameScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
   avancarAno() {
     if (!this.estado.jogoAtivo) return;
+    if (this.avancando) return;
+    this.avancando = true;
+    this.time.delayedCall(700, function() { this.avancando = false; }, [], this);
+
+    // Captura delta de CO2 ANTES para o texto flutuante
+    var co2Antes  = this.estado.co2;
 
     this.estado    = ClimateAlgorithm.avancarAno(this.estado);
     var resultado  = ClimateAlgorithm.verificarCondicoes(this.estado);
+    var deltaCO2   = this.estado.co2 - co2Antes;
+
+    // Flash rápido branco na tela ao avançar ano
+    var flash = this.add.rectangle(267, 350, 534, 700, 0xffffff, 0.18).setDepth(50);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 300, onComplete: function() { flash.destroy(); } });
+
+    // Texto flutuante mostrando variação de CO₂ no centro da grade
+    var co2Str  = (deltaCO2 >= 0 ? '+' : '') + deltaCO2 + ' ppm';
+    var co2Cor  = deltaCO2 <= 0 ? '#2ecc71' : '#e74c3c';
+    var co2Txt  = this.add.text(267, 350, co2Str, {
+      fontSize: '22px', fontStyle: 'bold', color: co2Cor, fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(55).setAlpha(0);
+
+    this.tweens.add({
+      targets: co2Txt, alpha: 1, y: 280, duration: 300, ease: 'Power2',
+      onComplete: function() {
+        this.tweens.add({
+          targets: co2Txt, alpha: 0, y: 230, duration: 600, delay: 300, ease: 'Power2',
+          onComplete: function() { co2Txt.destroy(); }
+        });
+      },
+      callbackScope: this
+    });
 
     this.atualizarHUD();
 
     if (resultado.fim) {
       this.estado.jogoAtivo = false;
 
-      // Disable advance button visually
+      // Desabilita botão
       if (this.btnAvançar) {
         this.btnAvançar.setFillStyle(0x0a1a0a);
         this.btnAvançar.disableInteractive();
       }
-      this.textoPanelInfo.setText(resultado.mensagem || 'Jogo encerrado.');
+      this.textoPanelInfo.setText('Simulação encerrada...');
 
+      // Flash dramático (vermelho para derrota, verde para vitória) antes de ir para EndScene
       var self = this;
-      this.time.delayedCall(1200, function() {
-        self.scene.start('EndScene', {
-          estado:    self.estado,
-          resultado: resultado
+      this.time.delayedCall(600, function() {
+        var cor = resultado.vitoria ? 0x2ecc71 : 0xe74c3c;
+
+        // Overlay cobre tela inteira
+        var overlay = self.add.rectangle(600, 350, 1200, 700, cor, 0).setDepth(100);
+        self.tweens.add({
+          targets: overlay, alpha: 0.6, duration: 400, yoyo: true, hold: 200,
+          onComplete: function() {
+            overlay.destroy();
+            self.scene.start('EndScene', { estado: self.estado, resultado: resultado });
+          }
         });
+
+        // Camera shake na derrota
+        if (!resultado.vitoria) {
+          self.cameras.main.shake(400, 0.012);
+        }
       }, [], this);
     }
   }
@@ -561,6 +630,29 @@ class GameScene extends Phaser.Scene {
         }
       });
     })(qvPct, qvCol, qvTarget);
+
+    // --- Danger pulse: pisca borda vermelha quando temperatura >= 1.7°C ---
+    if (this.estado.temperatura >= 1.7 && this.estado.jogoAtivo) {
+      if (!this.dangerOverlay) {
+        this.dangerOverlay = this.add.graphics().setDepth(90);
+        this.dangerOverlay.lineStyle(6, 0xe74c3c, 0.9);
+        this.dangerOverlay.strokeRect(3, 3, 528, 694);
+      }
+      if (!this.dangerTween) {
+        this.dangerTween = this.tweens.add({
+          targets:  this.dangerOverlay,
+          alpha:    0,
+          duration: 700,
+          yoyo:     true,
+          repeat:   -1,
+          ease:     'Sine.inOut'
+        });
+      }
+    } else if (this.dangerOverlay && this.estado.temperatura < 1.7) {
+      this.dangerOverlay.destroy();
+      this.dangerOverlay = null;
+      this.dangerTween   = null;
+    }
   }
 
   // -----------------------------------------------------------------------

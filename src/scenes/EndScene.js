@@ -1,270 +1,237 @@
-var EndScene = new Phaser.Class({
+// EndScene.js — Cidade Sustentável 2050
+// Tela de resultado (vitória ou derrota) com pontuação animada
 
-  Extends: Phaser.Scene,
+class EndScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'EndScene' });
+  }
 
-  initialize:
-  function EndScene() {
-    Phaser.Scene.call(this, { key: 'EndScene' });
-  },
-
-  create: function(data) {
-    var estado = data.estado;
+  // data: { estado, resultado }
+  create(data) {
+    var estado    = data.estado;
     var resultado = data.resultado;
-    var vitoria = resultado.vitoria;
-    var motivo = resultado.motivo;
+    var vitoria   = resultado.vitoria;
+    var motivo    = resultado.motivo;
     var pontuacao = ClimateAlgorithm.calcularPontuacao(estado);
 
     this.criarFundo(vitoria);
     this.criarTitulo(vitoria, motivo);
     this.criarCards(estado, vitoria);
     this.criarPontuacao(pontuacao, vitoria);
-    this.criarBotaoJogarNovamente(vitoria);
     this.criarRodape(estado, vitoria);
-  },
+    this.criarBotaoJogarNovamente(vitoria);
+  }
 
-  criarFundo: function(vitoria) {
+  // -----------------------------------------------------------------------
+  criarFundo(vitoria) {
     var corFundo = vitoria ? 0x071a0f : 0x1a0707;
-    var corGlow = vitoria ? 0x2ecc71 : 0xe74c3c;
+    var corGlow  = vitoria ? 0x2ecc71 : 0xe74c3c;
 
     this.add.rectangle(600, 350, 1200, 700, corFundo).setOrigin(0.5);
-    this.add.rectangle(600, 0, 1200, 120, corGlow, 0.12).setOrigin(0.5, 0);
-  },
+    this.add.rectangle(600, 0, 1200, 130, corGlow, 0.10).setOrigin(0.5, 0);
 
-  criarTitulo: function(vitoria, motivo) {
-    var titulo, subtitulo, corTitulo, corSubtitulo;
+    // Linha decorativa no fundo do glow
+    var line = this.add.graphics();
+    line.lineStyle(1, corGlow, 0.3);
+    line.lineBetween(0, 130, 1200, 130);
+  }
+
+  // -----------------------------------------------------------------------
+  criarTitulo(vitoria, motivo) {
+    var titulo, subtitulo, corTitulo, corSub;
 
     if (vitoria) {
-      titulo = 'VITÓRIA!';
+      titulo    = 'VITÓRIA!';
       subtitulo = 'Você salvou o clima até 2050!';
       corTitulo = '#2ecc71';
-      corSubtitulo = '#a9dfbf';
+      corSub    = '#a9dfbf';
     } else {
-      titulo = 'GAME OVER';
+      titulo    = 'GAME OVER';
       corTitulo = '#e74c3c';
+      corSub    = '#f1948a';
 
-      if (motivo === 'temperatura') {
-        subtitulo = 'A temperatura global ultrapassou +2.0°C';
-      } else if (motivo === 'co2') {
-        subtitulo = 'O CO2 atmosférico atingiu nível crítico (560 ppm)';
-      } else if (motivo === 'meta_nao_atingida') {
-        subtitulo = '2050 chegou, mas as metas climáticas não foram atingidas';
-      } else {
-        subtitulo = 'A simulação chegou ao fim';
-      }
-
-      corSubtitulo = '#f1948a';
+      if (motivo === 'temperatura')       subtitulo = 'A temperatura global ultrapassou +2.0°C';
+      else if (motivo === 'co2')          subtitulo = 'O CO₂ atingiu nível crítico (560 ppm)';
+      else if (motivo === 'meta_nao_atingida') subtitulo = '2050 chegou, mas as metas não foram atingidas';
+      else                                subtitulo = 'Simulação encerrada';
     }
 
-    var tituloText = this.add.text(600, 120, titulo, {
-      fontSize: '80px',
-      fontStyle: 'bold',
-      color: corTitulo,
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    tituloText.setAlpha(0);
-    tituloText.setScale(0.8);
+    // Título principal (animado)
+    var tituloText = this.add.text(600, 55, titulo, {
+      fontSize:   '74px',
+      fontStyle:  'bold',
+      color:      corTitulo,
+      fontFamily: 'Inter, Arial Black, Arial'
+    }).setOrigin(0.5).setAlpha(0).setScale(0.7);
 
     this.tweens.add({
-      targets: tituloText,
-      alpha: 1,
-      scale: 1.0,
-      duration: 700,
-      ease: 'Power2.out'
+      targets:  tituloText,
+      alpha:    1,
+      scale:    1.0,
+      duration: 600,
+      ease:     'Back.out'
     });
 
-    this.add.text(600, 210, subtitulo, {
-      fontSize: '24px',
-      color: corSubtitulo,
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-  },
+    // Subtítulo
+    var subText = this.add.text(600, 155, subtitulo, {
+      fontSize:   '22px',
+      color:      corSub,
+      fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setAlpha(0);
 
-  criarCards: function(estado, vitoria) {
-    var corFundoCard = vitoria ? 0x0d2a15 : 0x2a0d0d;
+    this.tweens.add({
+      targets:  subText,
+      alpha:    1,
+      duration: 500,
+      delay:    300,
+      ease:     'Power2'
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  criarCards(estado, vitoria) {
+    var corFundo = vitoria ? 0x0d2a15 : 0x2a0d0d;
     var corBorda = vitoria ? 0x2ecc71 : 0xe74c3c;
 
     var posicoes = [240, 600, 960];
-    var labels = ['TEMPERATURA FINAL', 'CO2 FINAL', 'QUALIDADE DE VIDA'];
-    var valores = [
-      '+' + estado.temperatura.toFixed(1) + '°C',
+    var labels   = ['TEMPERATURA', 'CO₂ FINAL', 'QUALIDADE DE VIDA'];
+    var valores  = [
+      '+' + estado.temperatura.toFixed(2) + '°C',
       estado.co2 + ' ppm',
-      estado.qualidadeVida + '%'
+      Math.round(estado.qualidadeVida) + '%'
     ];
-
-    var corValores = [
+    var cores = [
       estado.temperatura <= 1.5 ? '#2ecc71' : '#e74c3c',
-      estado.co2 <= 350 ? '#2ecc71' : estado.co2 <= 420 ? '#f39c12' : '#e74c3c',
-      estado.qualidadeVida >= 60 ? '#2ecc71' : estado.qualidadeVida >= 30 ? '#f39c12' : '#e74c3c'
+      estado.co2 <= 350 ? '#2ecc71' : (estado.co2 <= 420 ? '#f39c12' : '#e74c3c'),
+      estado.qualidadeVida >= 60 ? '#2ecc71' : (estado.qualidadeVida >= 30 ? '#f39c12' : '#e74c3c')
     ];
-
-    var delayStagger = [0, 150, 300];
 
     for (var i = 0; i < 3; i++) {
-      (function(index) {
-        var graphics = this.make.graphics({ x: 0, y: 0, add: false });
-        graphics.fillStyle(corFundoCard, 1);
-        graphics.fillRect(posicoes[index] - 130, 270, 260, 100);
-        graphics.strokeStyle(corBorda, 0.6, 1.5);
-        graphics.strokeRect(posicoes[index] - 130, 270, 260, 100);
-        graphics.generateTexture('card_' + index, 260, 100);
-        graphics.destroy();
+      (function(scene, idx) {
+        var cx  = posicoes[idx];
+        var cy  = 295;
+        var w   = 260;
+        var h   = 100;
+        var delay = idx * 120;
 
-        var cardImage = this.add.image(posicoes[index], 320, 'card_' + index);
-        cardImage.setAlpha(0);
+        // Card background — usando Graphics direto na cena (sem generateTexture)
+        var g = scene.add.graphics();
+        g.fillStyle(corFundo, 1);
+        g.fillRect(cx - w/2, cy - h/2, w, h);
+        g.lineStyle(1.5, corBorda, 0.7);
+        g.strokeRect(cx - w/2, cy - h/2, w, h);
+        g.setAlpha(0);
 
-        this.tweens.add({
-          targets: cardImage,
-          alpha: 1,
-          duration: 600,
-          delay: delayStagger[index],
-          ease: 'Power2.out'
-        });
+        // Rótulo (ex: "TEMPERATURA")
+        var lbl = scene.add.text(cx, cy - 28, labels[idx], {
+          fontSize:   '12px',
+          color:      '#95a5a6',
+          fontFamily: 'Inter, Arial'
+        }).setOrigin(0.5).setAlpha(0);
 
-        var labelText = this.add.text(posicoes[index], 285, labels[index], {
-          fontSize: '12px',
-          color: '#7f8c8d',
-          fontFamily: 'Arial'
-        }).setOrigin(0.5);
+        // Valor (ex: "+1.8°C")
+        var val = scene.add.text(cx, cy + 10, valores[idx], {
+          fontSize:   '30px',
+          fontStyle:  'bold',
+          color:      cores[idx],
+          fontFamily: 'Inter, Arial Black, Arial'
+        }).setOrigin(0.5).setAlpha(0);
 
-        labelText.setAlpha(0);
-        this.tweens.add({
-          targets: labelText,
-          alpha: 1,
-          duration: 600,
-          delay: delayStagger[index],
-          ease: 'Power2.out'
-        });
+        // Anima entrada
+        scene.tweens.add({ targets: [g, lbl, val], alpha: 1, duration: 500, delay: delay + 250 });
 
-        var valorText = this.add.text(posicoes[index], 330, valores[index], {
-          fontSize: '28px',
-          fontStyle: 'bold',
-          color: corValores[index],
-          fontFamily: 'Arial'
-        }).setOrigin(0.5);
-
-        valorText.setAlpha(0);
-        this.tweens.add({
-          targets: valorText,
-          alpha: 1,
-          duration: 600,
-          delay: delayStagger[index],
-          ease: 'Power2.out'
-        });
-      }).call(this, i);
+      })(this, i);
     }
-  },
-
-  criarPontuacao: function(pontuacao, vitoria) {
-    var corPontuacao = vitoria ? '#f9e79f' : '#e59866';
-
-    this.add.text(600, 390, 'PONTUAÇÃO FINAL', {
-      fontSize: '14px',
-      color: '#7f8c8d',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    var scoreText = this.add.text(600, 445, '0', {
-      fontSize: '56px',
-      fontStyle: 'bold',
-      color: corPontuacao,
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    var scoreObj = { val: 0 };
-    this.tweens.add({
-      targets: scoreObj,
-      val: pontuacao,
-      duration: 1500,
-      ease: 'Power2',
-      onUpdate: function() {
-        scoreText.setText(Math.round(scoreObj.val).toString());
-      },
-      onUpdateScope: this
-    });
-  },
-
-  criarRodape: function(estado, vitoria) {
-    var anoText = 'Simulação encerrada em ' + estado.ano;
-    this.add.text(600, 495, anoText, {
-      fontSize: '15px',
-      color: '#5d6d7e',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    var msgMotivacional;
-    var corMsg;
-
-    if (vitoria) {
-      msgMotivacional = 'Parabéns! Suas decisões sustentáveis fizeram a diferença.';
-      corMsg = '#a9dfbf';
-    } else {
-      msgMotivacional = 'Tente novamente! Foque em energias limpas e parques.';
-      corMsg = '#f1948a';
-    }
-
-    this.add.text(600, 535, msgMotivacional, {
-      fontSize: '16px',
-      color: corMsg,
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    this.add.text(600, 655, 'ODS 13 — Ação Contra a Mudança Global do Clima | UNINASSAU 2026', {
-      fontSize: '11px',
-      color: '#2c3e50',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-  },
-
-  criarBotaoJogarNovamente: function(vitoria) {
-    var corFundo = vitoria ? 0x1a472a : 0x4a1515;
-    var corBorda = vitoria ? 0x2ecc71 : 0xe74c3c;
-    var corTexto = vitoria ? '#2ecc71' : '#e74c3c';
-
-    var graphics = this.make.graphics({ x: 0, y: 0, add: false });
-    graphics.fillStyle(corFundo, 1);
-    graphics.fillRect(260, 572, 280, 52);
-    graphics.generateTexture('btn_background', 280, 52);
-    graphics.destroy();
-
-    var botaoImage = this.add.image(600, 598, 'btn_background');
-    botaoImage.setInteractive();
-
-    var botaoGraphics = this.make.graphics({ x: 0, y: 0, add: false });
-    botaoGraphics.strokeStyle(corBorda, 1.5);
-    botaoGraphics.strokeRect(260, 572, 280, 52);
-    botaoGraphics.generateTexture('btn_border', 280, 52);
-    botaoGraphics.destroy();
-
-    var botaoBorder = this.add.image(600, 598, 'btn_border');
-
-    var botaoText = this.add.text(600, 598, 'JOGAR NOVAMENTE', {
-      fontSize: '18px',
-      fontStyle: 'bold',
-      color: corTexto,
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-
-    botaoImage.on('pointerdown', function() {
-      this.scene.start('MenuScene');
-    }, this);
-
-    botaoImage.on('pointerover', function() {
-      this.tweens.add({
-        targets: [botaoImage, botaoBorder, botaoText],
-        scale: 1.05,
-        duration: 200,
-        ease: 'Power2.out'
-      });
-    }, this);
-
-    botaoImage.on('pointerout', function() {
-      this.tweens.add({
-        targets: [botaoImage, botaoBorder, botaoText],
-        scale: 1.0,
-        duration: 200,
-        ease: 'Power2.out'
-      });
-    }, this);
   }
-});
+
+  // -----------------------------------------------------------------------
+  criarPontuacao(pontuacao, vitoria) {
+    var cor = vitoria ? '#f9e79f' : '#e59866';
+
+    this.add.text(600, 380, 'PONTUAÇÃO FINAL', {
+      fontSize:   '13px',
+      color:      '#7f8c8d',
+      fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5);
+
+    var scoreText = this.add.text(600, 435, '0', {
+      fontSize:   '60px',
+      fontStyle:  'bold',
+      color:      cor,
+      fontFamily: 'Inter, Arial Black, Arial'
+    }).setOrigin(0.5);
+
+    // Contador animado 0 → pontuacao
+    var obj = { val: 0 };
+    this.tweens.add({
+      targets:  obj,
+      val:      pontuacao,
+      duration: 1400,
+      delay:    500,
+      ease:     'Power2',
+      onUpdate: function() {
+        scoreText.setText(Math.round(obj.val).toLocaleString('pt-BR'));
+      }
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  criarRodape(estado, vitoria) {
+    this.add.text(600, 510, 'Simulação encerrada em ' + estado.ano, {
+      fontSize:   '14px',
+      color:      '#5d6d7e',
+      fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5);
+
+    var msg = vitoria
+      ? 'Parabéns! Suas decisões sustentáveis fizeram a diferença.'
+      : 'Tente novamente! Foque em energias limpas e parques.';
+    var corMsg = vitoria ? '#a9dfbf' : '#f1948a';
+
+    this.add.text(600, 542, msg, {
+      fontSize:   '15px',
+      color:      corMsg,
+      fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5);
+
+    this.add.text(600, 665, 'ODS 13 — Ação Contra a Mudança Global do Clima | UNINASSAU 2026', {
+      fontSize:   '11px',
+      color:      '#2c3e50',
+      fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5);
+  }
+
+  // -----------------------------------------------------------------------
+  criarBotaoJogarNovamente(vitoria) {
+    var corFundo  = vitoria ? 0x1a472a : 0x4a1515;
+    var corBorda  = vitoria ? 0x2ecc71 : 0xe74c3c;
+    var corTexto  = vitoria ? '#2ecc71' : '#e74c3c';
+    var cx = 600, cy = 598, bw = 290, bh = 54;
+
+    // Fundo do botão (Graphics direto)
+    var bg = this.add.graphics();
+    bg.fillStyle(corFundo, 1);
+    bg.fillRect(cx - bw/2, cy - bh/2, bw, bh);
+    bg.lineStyle(2, corBorda, 1.0);
+    bg.strokeRect(cx - bw/2, cy - bh/2, bw, bh);
+
+    // Zona interativa invisível por cima
+    var zone = this.add.zone(cx, cy, bw, bh).setInteractive();
+
+    var txt = this.add.text(cx, cy, 'JOGAR NOVAMENTE', {
+      fontSize:   '19px',
+      fontStyle:  'bold',
+      color:      corTexto,
+      fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5);
+
+    var self = this;
+    zone.on('pointerdown',  function() { self.scene.start('MenuScene'); });
+    zone.on('pointerover',  function() {
+      self.tweens.add({ targets: [bg, txt], scaleX: 1.04, scaleY: 1.04, duration: 100 });
+    });
+    zone.on('pointerout',   function() {
+      self.tweens.add({ targets: [bg, txt], scaleX: 1.0,  scaleY: 1.0,  duration: 100 });
+    });
+  }
+}
