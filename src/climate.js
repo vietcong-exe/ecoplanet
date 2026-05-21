@@ -4,346 +4,383 @@
  * =============================================================================
  *
  * DESCRIÇÃO DO ARQUIVO:
- *   Este arquivo contém o núcleo algorítmico do jogo educacional "Cidade
- *   Sustentável 2050", desenvolvido como trabalho de Programação Lógica para
- *   ilustrar os conceitos da ODS 13 (Ação Contra a Mudança Global do Clima)
- *   da ONU (Organização das Nações Unidas).
+ *   Núcleo algorítmico do jogo. Contém lógica de simulação climática,
+ *   sistema de eventos aleatórios e metas anuais progressivas.
  *
  * FUNÇÕES PURAS (SEM DEPENDÊNCIA DO PHASER):
- *   Todas as funções aqui definidas são funções puras, ou seja, não dependem
- *   do framework Phaser nem de qualquer estado global externo. Elas recebem
- *   dados como entrada e retornam novos dados como saída, sem efeitos
- *   colaterais. Isso facilita testes, depuração e apresentação acadêmica.
+ *   Todas as funções recebem dados como entrada e retornam novos dados
+ *   sem modificar o estado original (princípio de imutabilidade).
  *
  * NOTA EDUCACIONAL — RELAÇÃO CO₂ E TEMPERATURA:
- *   A concentração de dióxido de carbono (CO₂) na atmosfera é medida em ppm
- *   (partes por milhão). No período pré-industrial (antes de 1850), essa
- *   concentração era de aproximadamente 280 ppm. Em 2024, já ultrapassou
- *   420 ppm — o nível mais alto em 800.000 anos.
- *
- *   O aquecimento global é diretamente relacionado a esse aumento: cada
- *   acréscimo de CO₂ intensifica o efeito estufa. O modelo simplificado
- *   utilizado neste jogo é:
- *
+ *   Fórmula simplificada (modelo linear educacional do IPCC):
  *       temperatura = 1.2 + (co2 - 420) × 0.003
+ *   Na realidade a relação é logarítmica, mas esta linearização
+ *   permite compreensão intuitiva para fins pedagógicos.
  *
- *   Esse modelo é uma linearização educacional baseada nos dados do IPCC
- *   (Painel Intergovernamental sobre Mudanças Climáticas). Na realidade,
- *   a relação é logarítmica, mas a linearização permite compreensão
- *   intuitiva para fins pedagógicos.
- *
- * RELAÇÃO COM A ODS 13:
- *   A ODS 13 exige "Ação Climática" urgente para limitar o aquecimento global
- *   a 1,5°C acima dos níveis pré-industriais (Acordo de Paris, 2015).
- *   Neste jogo, o jogador gerencia uma cidade até 2050, tomando decisões de
- *   infraestrutura (energia solar, transporte público, parques, etc.) para
- *   reduzir emissões de CO₂ e melhorar a qualidade de vida, alcançando
- *   exatamente a meta estabelecida pela ODS 13.
- *
- * ESTRUTURA DO OBJETO DE ESTADO:
- *   O jogo utiliza um único objeto de estado imutável que é recriado a cada
- *   turno (ano), garantindo rastreabilidade e transparência algorítmica.
- *
- * Autores: Trabalho acadêmico — Programação Lógica
- * Disciplina: Lógica de Programação
+ * Disciplina: Lógica de Programação — UNINASSAU
  * Tema: ODS 13 — Ação Contra a Mudança Global do Clima
  * =============================================================================
  */
 
 // =============================================================================
+// DADOS GLOBAIS: EVENTOS CLIMÁTICOS
+// Lista de eventos que podem ocorrer aleatoriamente durante a simulação.
+// =============================================================================
+var EVENTOS = [
+    {
+        id:        'onda_calor',
+        nome:      'Onda de Calor',
+        descricao: 'Temperaturas extremas elevam consumo de energia e emissões.',
+        efeito:    'CO₂ +25 ppm',
+        co2Extra:  25,
+        budgetExtra: 0,
+        destroiEdificio: false,
+        cor:       0xe74c3c,
+        corHex:    '#e74c3c'
+    },
+    {
+        id:        'seca',
+        nome:      'Grande Seca',
+        descricao: 'Seca severa reduz qualidade de vida e aumenta incêndios.',
+        efeito:    'CO₂ +15 ppm | QV -20',
+        co2Extra:  15,
+        budgetExtra: 0,
+        qvPenalidade: 20,
+        destroiEdificio: false,
+        cor:       0xe67e22,
+        corHex:    '#e67e22'
+    },
+    {
+        id:        'enchente',
+        nome:      'Enchente Extrema',
+        descricao: 'Chuvas intensas danificam infraestrutura urbana.',
+        efeito:    'R$ -150k | Destrói 1 edifício',
+        co2Extra:  0,
+        budgetExtra: -150000,
+        destroiEdificio: true,
+        cor:       0x2980b9,
+        corHex:    '#2980b9'
+    },
+    {
+        id:        'crise_energetica',
+        nome:      'Crise Energética',
+        descricao: 'Escassez de combustíveis eleva emissões e custos.',
+        efeito:    'CO₂ +20 ppm | R$ -100k',
+        co2Extra:  20,
+        budgetExtra: -100000,
+        destroiEdificio: false,
+        cor:       0x8e44ad,
+        corHex:    '#8e44ad'
+    }
+];
+
+// =============================================================================
+// DADOS GLOBAIS: METAS ANUAIS PROGRESSIVAS
+// Checkpoints de CO₂ e qualidade de vida que o jogador deve atingir.
+// Baseadas nas metas reais do Acordo de Paris e da Agenda 2030 da ONU.
+// =============================================================================
+var METAS = [
+    {
+        ano:      2030,
+        co2Max:   460,
+        qvMin:    0,
+        descricao: 'CO₂ abaixo de 460 ppm',
+        penalidade: 600
+    },
+    {
+        ano:      2035,
+        co2Max:   440,
+        qvMin:    25,
+        descricao: 'CO₂ < 440 ppm e QV > 25%',
+        penalidade: 800
+    },
+    {
+        ano:      2040,
+        co2Max:   420,
+        qvMin:    35,
+        descricao: 'CO₂ < 420 ppm e QV > 35%',
+        penalidade: 1000
+    },
+    {
+        ano:      2045,
+        co2Max:   390,
+        qvMin:    50,
+        descricao: 'CO₂ < 390 ppm e QV > 50%',
+        penalidade: 1200
+    }
+];
+
+// =============================================================================
 // OBJETO PRINCIPAL: ClimateAlgorithm
-// Agrupa todas as funções algorítmicas do sistema climático do jogo.
 // =============================================================================
 var ClimateAlgorithm = {
 
     // =========================================================================
     // FUNÇÃO 1: criarEstadoInicial()
-    // =========================================================================
-    // Cria e retorna um objeto representando o estado inicial do jogo.
-    // Cada propriedade corresponde a uma variável do sistema climático/urbano
-    // que será monitorada e modificada ao longo da simulação.
+    // Cria o estado de início do jogo.
+    // ATENÇÃO: A cidade começa em CRISE — CO₂ já em 475 ppm (zona de perigo)!
+    // O jogador deve agir imediatamente para evitar o colapso climático.
     // =========================================================================
     criarEstadoInicial: function () {
-
-        // Retorna um novo objeto com todos os atributos do jogo no ano de início
         return {
-            // Ano atual da simulação (começa em 2024, termina em 2050)
-            ano: 2024,
+            ano:           2024,
 
-            // Concentração de CO₂ atmosférico em ppm (Partes Por Milhão).
-            // Valor atual real: ~420 ppm (nível pré-industrial era 280 ppm)
-            co2: 420,
+            // CO₂ começa em 475 ppm — cidade industrial já em zona de alerta.
+            // (Nível pré-industrial: 280 ppm | Limite crítico do jogo: 560 ppm)
+            co2:           475,
 
-            // Aquecimento global em °C acima do nível pré-industrial (1850).
-            // O Acordo de Paris estabelece o limite crítico de 1,5°C.
-            temperatura: 1.2,
+            // Temperatura inicial já elevada: 1.365°C acima do pré-industrial.
+            // A borda vermelha pulsante já estará ativa desde o início!
+            temperatura:   parseFloat((1.2 + (475 - 420) * 0.003).toFixed(2)),
 
-            // Índice de qualidade de vida da cidade, numa escala de 0 a 100.
-            // Representa bem-estar, saúde, mobilidade e sustentabilidade urbana.
-            qualidadeVida: 30,
+            // Qualidade de vida baixa — cidade suja e congestionada.
+            qualidadeVida: 20,
 
-            // Orçamento municipal disponível em Reais (R$).
-            // O jogador usa esse recurso para construir estruturas na cidade.
-            orcamento: 800000,
+            // Orçamento inicial reduzido — obriga decisões estratégicas.
+            orcamento:     600000,
 
-            // Grade da cidade: array de 36 posições representando uma malha 6x6.
-            // Cada posição pode ser null (terreno vazio) ou uma string com o
-            // tipo da estrutura construída (ex: 'solar', 'parque', 'bus').
-            grade: new Array(36).fill(null),
+            // Grade 6×6 = 36 tiles. Será pré-populada com 3 fábricas pelo GameScene.
+            grade:         new Array(36).fill(null),
 
-            // Flag que indica se o jogo está em andamento.
-            // Torna-se false quando uma condição de fim de jogo é atingida.
-            jogoAtivo: true
+            // Acumula penalidades por metas anuais perdidas (descontado na pontuação).
+            penalidades:   0,
+
+            jogoAtivo:     true
         };
     },
 
     // =========================================================================
     // FUNÇÃO 2: avancarAno(estado)
-    // =========================================================================
     // ALGORITMO PRINCIPAL DA SIMULAÇÃO CLIMÁTICA.
     //
-    // Recebe o estado atual do jogo e calcula o novo estado após um ano
-    // de simulação. Considera as estruturas construídas pelo jogador na
-    // grade da cidade e aplica as fórmulas climáticas e econômicas.
-    //
-    // IMPORTANTE: Esta função NÃO modifica o objeto 'estado' original.
-    // Em vez disso, cria uma cópia (padrão de imutabilidade), processa os
-    // cálculos na cópia e retorna o novo objeto atualizado.
-    //
-    // Parâmetros:
-    //   estado (Object) — o estado atual do jogo (não será alterado)
-    //
-    // Retorna:
-    //   (Object) — novo objeto de estado com os valores atualizados
+    // Novidades vs. versão anterior:
+    //   - Emissão base ESCALA com os anos (crescimento populacional)
+    //   - Custo anual de manutenção da cidade (R$15k/ano)
+    //   - Receita base removida (apenas estruturas geram renda)
     // =========================================================================
     avancarAno: function (estado) {
 
         // ---- Passo 0: Criar cópia do estado (imutabilidade) ----
-        // Copiamos o objeto para não modificar o original.
-        // O array 'grade' precisa de cópia separada pois Object.assign
-        // faz cópia rasa (shallow copy) — o array seria compartilhado.
         var novo = Object.assign({}, estado);
-        novo.grade = estado.grade.slice(); // cópia independente do array
+        novo.grade = estado.grade.slice();
 
         // ---- Passo 1: Inicializar variáveis do turno ----
 
-        // deltaCO2: variação de CO₂ neste turno.
-        // Começa em +2 ppm, representando as emissões globais de fundo
-        // que o jogador não controla (indústria global, desmatamento, etc.)
-        var deltaCO2 = 2;
+        // Emissão de fundo ESCALA com o tempo:
+        // Em 2024: +4 ppm/ano | Em 2050: ~7 ppm/ano
+        // Representa crescimento populacional e industrial global.
+        var emissaoBase = 4 + Math.floor((novo.ano - 2024) * 0.12);
 
-        // totalQV: acumulador da qualidade de vida vinda das estruturas.
-        // Será somado ao longo do loop e normalizado depois.
-        var totalQV = 0;
+        var deltaCO2 = emissaoBase; // começa com emissão de fundo
+        var totalQV  = 0;
+        var receita  = 0;           // sem receita base — só estruturas geram renda
 
-        // receita: receita municipal gerada neste turno.
-        // Começa em R$50.000 como receita base da prefeitura (impostos, etc.)
-        var receita = 50000;
-
-        // ---- Passo 2: Percorre todas as células da grade ----
-        // Para cada uma das 36 posições da grade 6x6:
+        // ---- Passo 2: Percorre todas as 36 células da grade ----
         for (var i = 0; i < novo.grade.length; i++) {
-
-            // Obtém o tipo de estrutura presente neste tile da grade
             var tipoEstrutura = novo.grade[i];
 
-            // Ignora tiles vazios (null) e tipos não reconhecidos pelo sistema
             if (tipoEstrutura !== null && STRUCTURES[tipoEstrutura]) {
-
-                // Recupera os dados da estrutura a partir do catálogo global
                 var estrutura = STRUCTURES[tipoEstrutura];
 
-                // Acumula o impacto no CO₂:
-                // Valores negativos = estrutura absorve/reduz CO₂ (ex: parques, solar)
-                // Valores positivos = estrutura emite CO₂ (ex: fábricas, tráfego)
+                // Acumula variação de CO₂ (negativo = absorve, positivo = emite)
                 deltaCO2 += estrutura.co2PorTurno;
 
-                // Acumula o impacto na qualidade de vida dos cidadãos
-                totalQV += estrutura.qvPorTurno;
+                // Acumula impacto na qualidade de vida
+                totalQV  += estrutura.qvPorTurno;
 
-                // Acumula a receita gerada pela estrutura
-                // (impostos, tarifas, economia de energia, etc.)
-                receita += estrutura.receitaPorTurno;
+                // Acumula receita gerada (impostos, tarifas, energia)
+                receita  += estrutura.receitaPorTurno;
             }
         }
-        // Ao final do loop, deltaCO2, totalQV e receita refletem
-        // o efeito combinado de TODAS as estruturas da cidade.
 
-        // ---- Passo 3: Atualizar concentração de CO₂ ----
-        // Aplica a variação calculada ao CO₂ atual.
-        // O valor mínimo é 280 ppm (nível pré-industrial — limite científico):
-        // seria impossível cair abaixo desse valor sem tecnologia futurista.
-        var novoCO2 = Math.max(280, novo.co2 + deltaCO2);
-        novo.co2 = novoCO2;
+        // ---- Passo 3: Custo de manutenção da cidade ----
+        // A cidade tem custo fixo anual independente das estruturas.
+        // Se a receita não cobrir este custo, o orçamento diminui.
+        var manutencao = 15000;
 
-        // ---- Passo 4: Calcular nova temperatura global ----
-        // Utiliza o modelo climático simplificado (linearização educacional):
-        //
-        //   T = 1.2 + (CO₂ - 420) × 0.003
-        //
-        // Onde:
-        //   1.2  = aquecimento atual em 2024 (°C acima do pré-industrial)
-        //   420  = concentração de CO₂ de referência em 2024 (ppm)
-        //   0.003 = sensibilidade climática simplificada (°C por ppm)
-        //
-        // parseFloat + toFixed(2) garante que a temperatura tenha
-        // exatamente 2 casas decimais (ex: 1.35, não 1.3500000001)
-        var novaTemperatura = parseFloat((1.2 + (novoCO2 - 420) * 0.003).toFixed(2));
-        novo.temperatura = novaTemperatura;
+        // ---- Passo 4: Atualizar CO₂ ----
+        novo.co2 = Math.max(280, novo.co2 + deltaCO2);
 
-        // ---- Passo 5: Calcular qualidade de vida normalizada ----
-        // O totalQV acumulado no loop é multiplicado por 2 para escalar
-        // o impacto das estruturas no índice geral.
-        // Math.max(0, ...) impede valores negativos (piso em 0).
-        // Math.min(100, ...) impede valores acima do máximo (teto em 100).
-        var novaQV = Math.min(100, Math.max(0, totalQV * 2));
-        novo.qualidadeVida = novaQV;
+        // ---- Passo 5: Calcular temperatura ----
+        novo.temperatura = parseFloat((1.2 + (novo.co2 - 420) * 0.003).toFixed(2));
 
-        // ---- Passo 6: Adicionar receita ao orçamento municipal ----
-        // A receita gerada pelas estruturas e a receita base são somadas
-        // ao orçamento disponível para o próximo turno.
-        novo.orcamento = novo.orcamento + receita;
+        // ---- Passo 6: Calcular qualidade de vida (0–100) ----
+        novo.qualidadeVida = Math.min(100, Math.max(0, totalQV * 2));
 
-        // ---- Passo 7: Avançar o ano da simulação ----
-        // Incrementa o marcador temporal em 1 unidade (1 ano por turno).
+        // ---- Passo 7: Atualizar orçamento ----
+        novo.orcamento = novo.orcamento + receita - manutencao;
+
+        // ---- Passo 8: Avançar o ano ----
         novo.ano = novo.ano + 1;
 
-        // Retorna o novo estado calculado (o estado original permanece intacto)
         return novo;
     },
 
     // =========================================================================
     // FUNÇÃO 3: verificarCondicoes(estado)
-    // =========================================================================
-    // Avalia as condições de fim de jogo com base no estado atual.
-    //
-    // O jogo pode terminar de 4 formas:
-    //   1. Derrota por temperatura crítica (≥ 2.0°C) — colapso climático
-    //   2. Derrota por CO₂ crítico (≥ 560 ppm) — ponto de não retorno
-    //   3. Vitória em 2050 — metas da ODS 13 atingidas
-    //   4. Derrota em 2050 — metas não atingidas ao fim do prazo
-    //
-    // Parâmetros:
-    //   estado (Object) — estado atual do jogo a ser avaliado
-    //
-    // Retorna:
-    //   (Object) — objeto com propriedades:
-    //              fim (boolean): true se o jogo deve encerrar
-    //              vitoria (boolean): true se o jogador venceu
-    //              motivo (string): identificador da condição atingida
+    // Verifica condições de fim de jogo.
+    // Condição extra: falência municipal (orçamento < 0).
     // =========================================================================
     verificarCondicoes: function (estado) {
 
-        // ---- Condição de derrota 1: Temperatura crítica ----
-        // Se o aquecimento global atingir ou superar 2.0°C acima do nível
-        // pré-industrial, os efeitos são irreversíveis (inundações, secas
-        // extremas, colapso de ecossistemas). O jogo encerra imediatamente.
+        // Derrota: colapso climático por temperatura
         if (estado.temperatura >= 2.0) {
-            return {
-                fim: true,
-                vitoria: false,
-                motivo: 'temperatura'  // aquecimento ultrapassou o limite crítico
-            };
+            return { fim: true, vitoria: false, motivo: 'temperatura' };
         }
 
-        // ---- Condição de derrota 2: Concentração de CO₂ crítica ----
-        // 560 ppm representa o dobro do nível pré-industrial — um marco
-        // científico associado a consequências climáticas catastróficas.
-        // Se atingido, o jogo encerra independentemente do ano.
+        // Derrota: CO₂ atingiu ponto de não retorno
         if (estado.co2 >= 560) {
+            return { fim: true, vitoria: false, motivo: 'co2' };
+        }
+
+        // Derrota: falência municipal
+        if (estado.orcamento < 0) {
+            return { fim: true, vitoria: false, motivo: 'falencia' };
+        }
+
+        // Fim de prazo: 2050
+        if (estado.ano > 2050) {
+            var venceu = estado.temperatura <= 1.5 && estado.qualidadeVida >= 60;
             return {
-                fim: true,
-                vitoria: false,
-                motivo: 'co2'  // concentração de CO₂ atingiu patamar catastrófico
+                fim:     true,
+                vitoria: venceu,
+                motivo:  venceu ? 'meta_atingida' : 'meta_nao_atingida'
             };
         }
 
-        // ---- Condições de fim de prazo (ano 2050) ----
-        // O Acordo de Paris e a Agenda 2030 da ONU definem 2050 como prazo
-        // para neutralidade de carbono. Verificamos se o jogador chegou lá.
-        if (estado.ano > 2050) {
+        return { fim: false };
+    },
 
-            // Verifica se TODAS as metas da ODS 13 foram cumpridas:
-            // - Temperatura contida em até 1.5°C (meta do Acordo de Paris)
-            // - Qualidade de vida acima de 60 (cidade sustentável e próspera)
-            if (estado.temperatura <= 1.5 && estado.qualidadeVida >= 60) {
+    // =========================================================================
+    // FUNÇÃO 4: gerarEvento(ano)
+    // Determina aleatoriamente se um evento climático ocorre neste ano.
+    //
+    // Probabilidade: 30% por ano (a partir de 2026, para dar tempo ao jogador).
+    // Retorna o evento sorteado ou null se não houve evento.
+    // =========================================================================
+    gerarEvento: function (ano) {
+
+        // Sem eventos nos primeiros 2 anos (jogador precisa se adaptar)
+        if (ano <= 2025) { return null; }
+
+        // 30% de chance de evento por turno
+        if (Math.random() > 0.30) { return null; }
+
+        // Sorteia um evento da lista (probabilidade uniforme)
+        var indice = Math.floor(Math.random() * EVENTOS.length);
+        return EVENTOS[indice];
+    },
+
+    // =========================================================================
+    // FUNÇÃO 5: aplicarEvento(estado, evento, gradeModificavel)
+    // Aplica os efeitos de um evento climático ao estado do jogo.
+    //
+    // Parâmetros:
+    //   estado            — estado atual do jogo
+    //   evento            — objeto do evento a aplicar
+    //   gradeModificavel  — array da grade (para o caso de enchente)
+    //
+    // Retorna: { novoEstado, tileDestruido }
+    //   (tileDestruido = índice do tile destruído pela enchente, ou -1)
+    // =========================================================================
+    aplicarEvento: function (estado, evento, gradeModificavel) {
+
+        var novo = Object.assign({}, estado);
+        novo.grade = estado.grade.slice();
+        var tileDestruido = -1;
+
+        // Aplica variação de CO₂ do evento
+        if (evento.co2Extra) {
+            novo.co2 = Math.max(280, novo.co2 + evento.co2Extra);
+            novo.temperatura = parseFloat((1.2 + (novo.co2 - 420) * 0.003).toFixed(2));
+        }
+
+        // Aplica variação no orçamento
+        if (evento.budgetExtra) {
+            novo.orcamento = novo.orcamento + evento.budgetExtra;
+        }
+
+        // Penalidade de qualidade de vida (seca)
+        if (evento.qvPenalidade) {
+            novo.qualidadeVida = Math.max(0, novo.qualidadeVida - evento.qvPenalidade);
+        }
+
+        // Enchente: destrói 1 edifício aleatório (exclui fábricas)
+        if (evento.destroiEdificio) {
+            // Coleta indices de tiles com estruturas destruíveis (não-fábrica)
+            var candidatos = [];
+            for (var i = 0; i < novo.grade.length; i++) {
+                if (novo.grade[i] !== null && novo.grade[i] !== 'fabrica') {
+                    candidatos.push(i);
+                }
+            }
+
+            if (candidatos.length > 0) {
+                // Sorteia qual edifício será destruído
+                var idx = candidatos[Math.floor(Math.random() * candidatos.length)];
+                novo.grade[idx] = null;
+                tileDestruido = idx;
+            }
+        }
+
+        return { novoEstado: novo, tileDestruido: tileDestruido };
+    },
+
+    // =========================================================================
+    // FUNÇÃO 6: verificarMetaAnual(estado)
+    // Verifica se o ano atual tem uma meta progressiva e se foi atingida.
+    //
+    // Retorna: null (sem meta este ano) ou objeto com info da meta.
+    // =========================================================================
+    verificarMetaAnual: function (estado) {
+
+        // Percorre as metas para encontrar a do ano atual
+        for (var i = 0; i < METAS.length; i++) {
+            var meta = METAS[i];
+
+            if (estado.ano === meta.ano) {
+                // Verifica se o jogador atingiu os requisitos
+                var passou = estado.co2 < meta.co2Max && estado.qualidadeVida >= meta.qvMin;
+
                 return {
-                    fim: true,
-                    vitoria: true,
-                    motivo: 'meta_atingida'  // parabéns: ODS 13 cumprida!
-                };
-            } else {
-                // 2050 chegou, mas as metas não foram alcançadas.
-                // Representa o cenário real de inação climática.
-                return {
-                    fim: true,
-                    vitoria: false,
-                    motivo: 'meta_nao_atingida'  // prazo esgotado sem atingir as metas
+                    meta:      meta,
+                    passou:    passou,
+                    penalidade: passou ? 0 : meta.penalidade
                 };
             }
         }
 
-        // ---- Jogo continua ----
-        // Nenhuma condição de fim foi ativada; a simulação prossegue.
-        return {
-            fim: false
-        };
+        return null; // nenhuma meta neste ano
     },
 
     // =========================================================================
-    // FUNÇÃO 4: calcularPontuacao(estado)
-    // =========================================================================
-    // Calcula a pontuação final do jogador com base no estado do jogo.
-    //
-    // A pontuação é composta por 4 bônus que incentivam as metas da ODS 13:
-    //   1. Bônus de temperatura — recompensa manter o clima controlado
-    //   2. Bônus de CO₂ — recompensa reduzir as emissões atmosféricas
-    //   3. Bônus de qualidade de vida — recompensa cidades sustentáveis
-    //   4. Bônus de orçamento — recompensa gestão financeira responsável
-    //
-    // Parâmetros:
-    //   estado (Object) — estado final do jogo a ser avaliado
-    //
-    // Retorna:
-    //   (number) — pontuação total inteira, mínimo 0
+    // FUNÇÃO 7: calcularPontuacao(estado)
+    // Pontuação final com desconto por penalidades acumuladas.
     // =========================================================================
     calcularPontuacao: function (estado) {
 
-        // ---- Componente 1: Bônus por temperatura baixa ----
-        // Fórmula: (2.0 - temperatura) × 2000
-        // Se a temperatura estiver em 1.2°C → bônus de 1600 pontos
-        // Se a temperatura estiver em 2.0°C → bônus de 0 pontos
-        // Math.max(0, ...) garante que temperaturas acima de 2.0°C não
-        // subtraiam pontos nesta componente.
-        var bonusTemperatura = Math.max(0, Math.round((2.0 - estado.temperatura) * 2000));
+        // Bônus por temperatura controlada
+        var bonusTemp = Math.max(0, Math.round((2.0 - estado.temperatura) * 2000));
 
-        // ---- Componente 2: Bônus por CO₂ baixo ----
-        // Fórmula: (500 - co2) × 2
-        // Se o CO₂ estiver em 420 ppm → bônus de 160 pontos
-        // Se o CO₂ estiver em 280 ppm → bônus de 440 pontos (máximo real)
-        // Math.max(0, ...) evita penalidade nesta componente.
-        var bonusCO2 = Math.max(0, Math.round((500 - estado.co2) * 2));
+        // Bônus por CO₂ baixo
+        var bonusCO2  = Math.max(0, Math.round((500 - estado.co2) * 2));
 
-        // ---- Componente 3: Bônus por qualidade de vida ----
-        // Cada ponto no índice de qualidade de vida vale 20 pontos na pontuação.
-        // Máximo possível: 100 × 20 = 2000 pontos.
-        var bonusQualidadeVida = estado.qualidadeVida * 20;
+        // Bônus por qualidade de vida
+        var bonusQV   = estado.qualidadeVida * 20;
 
-        // ---- Componente 4: Bônus por orçamento restante ----
-        // Cada R$10.000 restantes no orçamento valem 1 ponto.
-        // Incentiva gestão fiscal prudente sem desperdício de recursos.
-        var bonusOrcamento = Math.floor(estado.orcamento / 10000);
+        // Bônus por orçamento restante
+        var bonusOrc  = Math.max(0, Math.floor(estado.orcamento / 10000));
 
-        // ---- Somar todos os componentes ----
-        var total = bonusTemperatura + bonusCO2 + bonusQualidadeVida + bonusOrcamento;
+        // Soma bruta
+        var bruto = bonusTemp + bonusCO2 + bonusQV + bonusOrc;
 
-        // Garante que a pontuação nunca seja negativa (mínimo absoluto: 0)
-        return Math.max(0, total);
+        // Desconto das penalidades por metas perdidas
+        var liquido = bruto - (estado.penalidades || 0);
+
+        return Math.max(0, liquido);
     }
 
 };
 // =============================================================================
 // Fim do arquivo climate.js
-// ClimateAlgorithm está disponível globalmente para uso pelo Phaser e pela
-// interface do jogo através da variável 'ClimateAlgorithm'.
 // =============================================================================

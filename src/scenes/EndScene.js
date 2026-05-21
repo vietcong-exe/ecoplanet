@@ -50,10 +50,11 @@ class EndScene extends Phaser.Scene {
       corTitulo = '#e74c3c';
       corSub    = '#f1948a';
 
-      if (motivo === 'temperatura')       subtitulo = 'A temperatura global ultrapassou +2.0°C';
-      else if (motivo === 'co2')          subtitulo = 'O CO₂ atingiu nível crítico (560 ppm)';
+      if (motivo === 'temperatura')            subtitulo = 'A temperatura global ultrapassou +2.0°C';
+      else if (motivo === 'co2')               subtitulo = 'O CO₂ atingiu nível crítico (560 ppm)';
+      else if (motivo === 'falencia')          subtitulo = 'Falência municipal — orçamento zerado';
       else if (motivo === 'meta_nao_atingida') subtitulo = '2050 chegou, mas as metas não foram atingidas';
-      else                                subtitulo = 'Simulação encerrada';
+      else                                     subtitulo = 'Simulação encerrada';
     }
 
     // Título principal (animado)

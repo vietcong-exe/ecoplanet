@@ -65,11 +65,17 @@ class GameScene extends Phaser.Scene {
     // Guard para evitar múltiplos avanços simultâneos
     this.avancando = false;
 
+    // Flag para popup em exibição (bloqueia avanço de ano)
+    this.popupAtivo = false;
+
     // Build the scene
     this.criarFundo();
     this.criarHUD();
     this.criarGrade();
     this.criarPainel();
+
+    // Pré-polui a cidade com 3 fábricas (Sistema 1 — Start sujo)
+    this.prePoluirCidade();
 
     // Initial HUD sync
     this.atualizarHUD();
@@ -206,17 +212,67 @@ class GameScene extends Phaser.Scene {
   }
 
   // -----------------------------------------------------------------------
+  // prePoluirCidade — Sistema 1: Start Sujo
+  // Coloca 3 fábricas pré-existentes na grade antes do jogador agir.
+  // -----------------------------------------------------------------------
+  prePoluirCidade() {
+    var posicoes = [0, 3, 5]; // tiles do canto superior esquerdo, meio e direito
+    var self = this;
+
+    for (var k = 0; k < posicoes.length; k++) {
+      (function(idx) {
+        var col = idx % self.COLS;
+        var row = Math.floor(idx / self.COLS);
+        var bx  = self.GX + col * self.TILE + self.TILE / 2;
+        var by  = self.GY + row * self.TILE + self.TILE / 2;
+
+        var img = self.add.image(bx, by, 'tex_fabrica').setDepth(5);
+        self.buildingImages[idx]  = img;
+        self.estado.grade[idx]    = 'fabrica';
+      })(posicoes[k]);
+    }
+  }
+
+  // -----------------------------------------------------------------------
   // onTileClick
   // -----------------------------------------------------------------------
   onTileClick(index) {
     if (!this.estado.jogoAtivo) return;
 
     if (this.modoDestrucao) {
-      if (this.buildingImages[index]) {
-        this.buildingImages[index].destroy();
-        this.buildingImages[index] = null;
+      var tipoAtual = this.estado.grade[index];
+      if (!this.buildingImages[index] || !tipoAtual) return; // tile vazio
+
+      // Demolição custa 20% do valor de construção (Sistema 1)
+      var custoDemolicao = Math.round(STRUCTURES[tipoAtual].custo * 0.20);
+
+      if (this.estado.orcamento < custoDemolicao) {
+        // Sem dinheiro para demolir — pisca orçamento
+        this.tweens.add({ targets: this.hudTextos.orcamento, alpha: 0.3, duration: 150, yoyo: true, repeat: 2 });
+        // Texto informativo
+        var sem = this.add.text(267, 350, 'Sem $ para demolir!', {
+          fontSize: '16px', color: '#e74c3c', fontStyle: 'bold', fontFamily: 'Inter, Arial'
+        }).setOrigin(0.5).setDepth(55);
+        this.tweens.add({ targets: sem, alpha: 0, y: 300, duration: 1000, onComplete: function() { sem.destroy(); } });
+        return;
       }
-      this.estado.grade[index] = null;
+
+      this.buildingImages[index].destroy();
+      this.buildingImages[index] = null;
+      this.estado.grade[index]   = null;
+      this.estado.orcamento     -= custoDemolicao;
+
+      // Texto flutuante mostrando custo da demolição
+      var col   = index % this.COLS;
+      var row   = Math.floor(index / this.COLS);
+      var dx    = this.GX + col * this.TILE + this.TILE / 2;
+      var dy    = this.GY + row * this.TILE + this.TILE / 2;
+      var dtxt  = this.add.text(dx, dy, '-R$' + (custoDemolicao/1000) + 'k demolido', {
+        fontSize: '12px', color: '#e67e22', fontFamily: 'Inter, Arial'
+      }).setOrigin(0.5).setDepth(20);
+      this.tweens.add({ targets: dtxt, y: dy - 40, alpha: 0, duration: 900,
+        onComplete: function() { dtxt.destroy(); } });
+
       this.atualizarHUD();
       return;
     }
@@ -489,72 +545,228 @@ class GameScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
   avancarAno() {
     if (!this.estado.jogoAtivo) return;
-    if (this.avancando) return;
+    if (this.avancando)  return;
+    if (this.popupAtivo) return;  // aguarda popup de evento/meta fechar
     this.avancando = true;
-    this.time.delayedCall(700, function() { this.avancando = false; }, [], this);
+    this.time.delayedCall(800, function() { this.avancando = false; }, [], this);
 
-    // Captura delta de CO2 ANTES para o texto flutuante
-    var co2Antes  = this.estado.co2;
+    var co2Antes = this.estado.co2;
+    var self     = this;
 
-    this.estado    = ClimateAlgorithm.avancarAno(this.estado);
-    var resultado  = ClimateAlgorithm.verificarCondicoes(this.estado);
-    var deltaCO2   = this.estado.co2 - co2Antes;
+    // ---- 1. Avança o ano (algoritmo climático) ----
+    this.estado = ClimateAlgorithm.avancarAno(this.estado);
 
-    // Flash rápido branco na tela ao avançar ano
-    var flash = this.add.rectangle(267, 350, 534, 700, 0xffffff, 0.18).setDepth(50);
+    // ---- 2. Sistema 2: Gera e aplica evento aleatório ----
+    var evento = ClimateAlgorithm.gerarEvento(this.estado.ano);
+    if (evento) {
+      var result = ClimateAlgorithm.aplicarEvento(this.estado, evento);
+      this.estado = result.novoEstado;
+
+      // Se enchente destruiu um edifício, remove o sprite
+      if (result.tileDestruido >= 0) {
+        var td = result.tileDestruido;
+        if (this.buildingImages[td]) {
+          this.buildingImages[td].destroy();
+          this.buildingImages[td] = null;
+        }
+      }
+    }
+
+    // ---- 3. Sistema 3: Verifica meta anual ----
+    var metaInfo = ClimateAlgorithm.verificarMetaAnual(this.estado);
+    if (metaInfo) {
+      this.estado.penalidades = (this.estado.penalidades || 0) + metaInfo.penalidade;
+    }
+
+    // ---- 4. Verifica condições de fim de jogo ----
+    var resultado = ClimateAlgorithm.verificarCondicoes(this.estado);
+
+    // ---- 5. Flash e texto flutuante de CO₂ ----
+    var deltaCO2 = this.estado.co2 - co2Antes;
+    var flash    = this.add.rectangle(267, 350, 534, 700, 0xffffff, 0.15).setDepth(50);
     this.tweens.add({ targets: flash, alpha: 0, duration: 300, onComplete: function() { flash.destroy(); } });
 
-    // Texto flutuante mostrando variação de CO₂ no centro da grade
-    var co2Str  = (deltaCO2 >= 0 ? '+' : '') + deltaCO2 + ' ppm';
-    var co2Cor  = deltaCO2 <= 0 ? '#2ecc71' : '#e74c3c';
-    var co2Txt  = this.add.text(267, 350, co2Str, {
+    var co2Str = (deltaCO2 >= 0 ? '+' : '') + deltaCO2 + ' ppm';
+    var co2Cor = deltaCO2 <= 0 ? '#2ecc71' : '#e74c3c';
+    var co2Txt = this.add.text(267, 370, co2Str, {
       fontSize: '22px', fontStyle: 'bold', color: co2Cor, fontFamily: 'Inter, Arial'
     }).setOrigin(0.5).setDepth(55).setAlpha(0);
-
     this.tweens.add({
-      targets: co2Txt, alpha: 1, y: 280, duration: 300, ease: 'Power2',
+      targets: co2Txt, alpha: 1, y: 310, duration: 300, ease: 'Power2',
       onComplete: function() {
-        this.tweens.add({
-          targets: co2Txt, alpha: 0, y: 230, duration: 600, delay: 300, ease: 'Power2',
+        self.tweens.add({
+          targets: co2Txt, alpha: 0, y: 260, duration: 600, delay: 300,
           onComplete: function() { co2Txt.destroy(); }
         });
-      },
-      callbackScope: this
+      }
     });
 
     this.atualizarHUD();
 
+    // ---- 6. Exibe popup de evento ou meta (com delay para não sobrepor efeitos) ----
+    var temPopup = evento || metaInfo;
+    if (temPopup && !resultado.fim) {
+      this.time.delayedCall(500, function() {
+        if (evento) {
+          self.mostrarPopupEvento(evento, function() {
+            if (metaInfo) {
+              self.mostrarPopupMeta(metaInfo);
+            }
+          });
+        } else if (metaInfo) {
+          self.mostrarPopupMeta(metaInfo);
+        }
+      }, [], this);
+    }
+
+    // ---- 7. Fim de jogo ----
     if (resultado.fim) {
       this.estado.jogoAtivo = false;
-
-      // Desabilita botão
       if (this.btnAvançar) {
         this.btnAvançar.setFillStyle(0x0a1a0a);
         this.btnAvançar.disableInteractive();
       }
       this.textoPanelInfo.setText('Simulação encerrada...');
 
-      // Flash dramático (vermelho para derrota, verde para vitória) antes de ir para EndScene
-      var self = this;
-      this.time.delayedCall(600, function() {
+      this.time.delayedCall(800, function() {
         var cor = resultado.vitoria ? 0x2ecc71 : 0xe74c3c;
-
-        // Overlay cobre tela inteira
         var overlay = self.add.rectangle(600, 350, 1200, 700, cor, 0).setDepth(100);
         self.tweens.add({
-          targets: overlay, alpha: 0.6, duration: 400, yoyo: true, hold: 200,
+          targets: overlay, alpha: 0.55, duration: 450, yoyo: true, hold: 200,
           onComplete: function() {
             overlay.destroy();
             self.scene.start('EndScene', { estado: self.estado, resultado: resultado });
           }
         });
-
-        // Camera shake na derrota
-        if (!resultado.vitoria) {
-          self.cameras.main.shake(400, 0.012);
-        }
+        if (!resultado.vitoria) { self.cameras.main.shake(400, 0.012); }
       }, [], this);
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // mostrarPopupEvento — Sistema 2: Eventos Aleatórios
+  // -----------------------------------------------------------------------
+  mostrarPopupEvento(evento, callback) {
+    var self = this;
+    this.popupAtivo = true;
+
+    var cx = 267, cy = 400, pw = 500, ph = 160;
+
+    // Fundo do popup
+    var bg = this.add.graphics().setDepth(200);
+    bg.fillStyle(0x0a0a14, 0.95);
+    bg.fillRect(cx - pw/2, cy - ph/2, pw, ph);
+    bg.lineStyle(2, evento.cor, 1.0);
+    bg.strokeRect(cx - pw/2, cy - ph/2, pw, ph);
+
+    // Ícone colorido
+    var ico = this.add.graphics().setDepth(201);
+    ico.fillStyle(evento.cor, 1);
+    ico.fillCircle(cx - pw/2 + 30, cy, 14);
+
+    // Textos
+    var t1 = this.add.text(cx - pw/2 + 55, cy - 45, 'EVENTO: ' + evento.nome.toUpperCase(), {
+      fontSize: '16px', fontStyle: 'bold', color: evento.corHex, fontFamily: 'Inter, Arial'
+    }).setDepth(201);
+
+    var t2 = this.add.text(cx - pw/2 + 55, cy - 20, evento.descricao, {
+      fontSize: '13px', color: '#bdc3c7', fontFamily: 'Inter, Arial'
+    }).setDepth(201);
+
+    var t3 = this.add.text(cx, cy + 25, evento.efeito, {
+      fontSize: '18px', fontStyle: 'bold', color: evento.corHex, fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(201);
+
+    var t4 = this.add.text(cx, cy + 60, 'Clique para continuar...', {
+      fontSize: '11px', color: '#5d6d7e', fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(201);
+
+    var elementos = [bg, ico, t1, t2, t3, t4];
+
+    // Animação de entrada
+    elementos.forEach(function(el) { el.setAlpha(0); });
+    this.tweens.add({ targets: elementos, alpha: 1, duration: 300 });
+
+    // Fechar ao clicar
+    var zone = this.add.zone(cx, cy, pw, ph).setInteractive().setDepth(202);
+    zone.on('pointerdown', function() {
+      self.tweens.add({
+        targets: elementos, alpha: 0, duration: 200,
+        onComplete: function() {
+          elementos.forEach(function(el) { el.destroy(); });
+          zone.destroy();
+          self.popupAtivo = false;
+          if (callback) { callback(); }
+        }
+      });
+    });
+
+    // Auto-fechar após 5 segundos
+    this.time.delayedCall(5000, function() {
+      if (self.popupAtivo) { zone.emit('pointerdown'); }
+    }, [], this);
+  }
+
+  // -----------------------------------------------------------------------
+  // mostrarPopupMeta — Sistema 3: Metas Anuais
+  // -----------------------------------------------------------------------
+  mostrarPopupMeta(metaInfo) {
+    var self  = this;
+    var meta  = metaInfo.meta;
+    var passou = metaInfo.passou;
+    this.popupAtivo = true;
+
+    var cx = 267, cy = 400, pw = 500, ph = 160;
+    var cor    = passou ? 0x2ecc71 : 0xe74c3c;
+    var corHex = passou ? '#2ecc71' : '#e74c3c';
+
+    var bg = this.add.graphics().setDepth(200);
+    bg.fillStyle(0x0a0a14, 0.95);
+    bg.fillRect(cx - pw/2, cy - ph/2, pw, ph);
+    bg.lineStyle(2, cor, 1.0);
+    bg.strokeRect(cx - pw/2, cy - ph/2, pw, ph);
+
+    var titulo  = passou ? 'META ' + meta.ano + ' ATINGIDA!' : 'META ' + meta.ano + ' PERDIDA!';
+    var sub1    = meta.descricao;
+    var sub2    = passou
+      ? '+0 penalidade — bom trabalho!'
+      : '-' + meta.penalidade + ' pontos de penalidade';
+
+    var t1 = this.add.text(cx, cy - 45, titulo, {
+      fontSize: '20px', fontStyle: 'bold', color: corHex, fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(201);
+
+    var t2 = this.add.text(cx, cy - 10, 'Meta: ' + sub1, {
+      fontSize: '14px', color: '#bdc3c7', fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(201);
+
+    var t3 = this.add.text(cx, cy + 25, sub2, {
+      fontSize: '16px', fontStyle: 'bold', color: corHex, fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(201);
+
+    var t4 = this.add.text(cx, cy + 60, 'Clique para continuar...', {
+      fontSize: '11px', color: '#5d6d7e', fontFamily: 'Inter, Arial'
+    }).setOrigin(0.5).setDepth(201);
+
+    var elementos = [bg, t1, t2, t3, t4];
+    elementos.forEach(function(el) { el.setAlpha(0); });
+    this.tweens.add({ targets: elementos, alpha: 1, duration: 300 });
+
+    var zone = this.add.zone(cx, cy, pw, ph).setInteractive().setDepth(202);
+    zone.on('pointerdown', function() {
+      self.tweens.add({
+        targets: elementos, alpha: 0, duration: 200,
+        onComplete: function() {
+          elementos.forEach(function(el) { el.destroy(); });
+          zone.destroy();
+          self.popupAtivo = false;
+        }
+      });
+    });
+
+    this.time.delayedCall(5000, function() {
+      if (self.popupAtivo) { zone.emit('pointerdown'); }
+    }, [], this);
   }
 
   // -----------------------------------------------------------------------
