@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(rtk git *)",
+      "Bash(rtk git commit -m 'chore: initial project structure + design spec *)"
+    ]
+  }
+}
