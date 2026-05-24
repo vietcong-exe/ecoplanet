@@ -8,8 +8,8 @@
 //   3. Substitua SUPABASE_URL e SUPABASE_ANON_KEY abaixo
 
 (function () {
-  var SUPABASE_URL      = 'https://SEU-PROJETO.supabase.co';
-  var SUPABASE_ANON_KEY = 'SUA-ANON-KEY-AQUI';
+  var SUPABASE_URL      = 'https://gygszyepkjzenvuagvtn.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5Z3N6eWVwa2p6ZW52dWFndnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MzgxOTEsImV4cCI6MjA5NTIxNDE5MX0.DvGLt8XfhRenDzZQEU0W1Zte8KsAJKiQK54WNxsGuFc';
 
   if (typeof supabase === 'undefined' || !supabase.createClient) {
     console.warn('[EcoPlanet] SDK Supabase não carregado. Auth desabilitado.');
