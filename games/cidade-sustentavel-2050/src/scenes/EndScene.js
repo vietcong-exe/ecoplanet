@@ -20,6 +20,7 @@ class EndScene extends Phaser.Scene {
     this.criarPontuacao(pontuacao, vitoria);
     this.criarRodape(estado, vitoria);
     this.criarBotaoJogarNovamente(vitoria);
+    if (vitoria) { this.concederFolha(); }
   }
 
   // -----------------------------------------------------------------------
@@ -233,6 +234,75 @@ class EndScene extends Phaser.Scene {
     });
     zone.on('pointerout',   function() {
       self.tweens.add({ targets: [bg, txt], scaleX: 1.0,  scaleY: 1.0,  duration: 100 });
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // concederFolha — concede 1 Folha ao usuário logado ao vencer
+  // -----------------------------------------------------------------------
+  concederFolha() {
+    if (!window._supabase) { return; } // SDK não carregado
+
+    var self = this;
+
+    window._supabase.auth.getSession().then(function (res) {
+      var session = res.data && res.data.session;
+      if (!session) { return; } // não está logado
+
+      var userId = session.user.id;
+
+      window._supabase
+        .from('profiles')
+        .select('folhas')
+        .eq('user_id', userId)
+        .single()
+        .then(function (res) {
+          if (res.error || !res.data) { return; }
+          var novasFolhas = (res.data.folhas || 0) + 1;
+
+          window._supabase
+            .from('profiles')
+            .update({ folhas: novasFolhas })
+            .eq('user_id', userId)
+            .then(function (res) {
+              if (!res.error) {
+                self.mostrarToastFolha(novasFolhas);
+              }
+            });
+        });
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // mostrarToastFolha — exibe toast animado com confirmação da Folha
+  // -----------------------------------------------------------------------
+  mostrarToastFolha(total) {
+    var self = this;
+
+    var toast = this.add.text(600, 195,
+      'Folha conquistada!  (total: ' + total + ')',
+      {
+        fontSize:   '15px',
+        fontStyle:  'bold',
+        color:      '#2ecc71',
+        fontFamily: 'Inter, Arial'
+      }
+    ).setOrigin(0.5).setAlpha(0).setDepth(50);
+
+    this.tweens.add({
+      targets:  toast,
+      alpha:    1,
+      duration: 400,
+      ease:     'Power2',
+      onComplete: function () {
+        self.tweens.add({
+          targets:  toast,
+          alpha:    0,
+          duration: 400,
+          delay:    2600,
+          onComplete: function () { toast.destroy(); }
+        });
+      }
     });
   }
 }
