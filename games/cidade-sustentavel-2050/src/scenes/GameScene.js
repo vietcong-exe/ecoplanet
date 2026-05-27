@@ -85,15 +85,15 @@ class GameScene extends Phaser.Scene {
   // criarFundo
   // -----------------------------------------------------------------------
   criarFundo() {
-    // Left area background
-    this.add.rectangle(267, 350, 534, 700, 0x0d1b12).setOrigin(0.5);
+    // Left area background (light green)
+    this.add.rectangle(267, 350, 534, 700, 0xe8f5e9).setOrigin(0.5);
 
-    // Right panel background
-    this.add.rectangle(870, 350, 655, 700, 0x070d1a).setOrigin(0.5);
+    // Right panel background (near white)
+    this.add.rectangle(870, 350, 655, 700, 0xf5f5f5).setOrigin(0.5);
 
     // Separator line
     var sep = this.add.graphics();
-    sep.lineStyle(1, 0x2ecc71, 0.2);
+    sep.lineStyle(2, 0xc8e6c9, 1.0);
     sep.lineBetween(540, 0, 540, 700);
   }
 
@@ -105,26 +105,28 @@ class GameScene extends Phaser.Scene {
 
     // --- Small coloured circle as game icon ---
     var icon = this.add.graphics();
-    icon.fillStyle(0x2ecc71, 1);
+    icon.fillStyle(0x43a047, 1);
     icon.fillCircle(16, 18, 8);
 
     // --- Title ---
     this.add.text(32, 12, 'CIDADE SUSTENTAVEL 2050', {
-      color:     '#2ecc71',
-      fontSize:  '15px',
-      fontStyle: 'bold'
+      color:      '#2e7d32',
+      fontSize:   '15px',
+      fontStyle:  'bold',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0, 0);
 
     // --- Year ---
     this.hudTextos.ano = this.add.text(267, 30, 'Ano: 2024', {
-      color:     '#ecf0f1',
-      fontSize:  '20px',
-      fontStyle: 'bold'
+      color:      '#33691e',
+      fontSize:   '20px',
+      fontStyle:  'bold',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5, 0);
 
     // --- Bar backgrounds ---
     var barBg = this.add.graphics();
-    barBg.fillStyle(0x1a2a1a, 1);
+    barBg.fillStyle(0xdcedc8, 1);
     barBg.fillRect(bl.x, bl.co2Y, bl.w, bl.h);
     barBg.fillRect(bl.x, bl.tmpY, bl.w, bl.h);
     barBg.fillRect(bl.x, bl.qvY,  bl.w, bl.h);
@@ -135,20 +137,20 @@ class GameScene extends Phaser.Scene {
     this.barrasQV   = this.add.graphics();
 
     // --- Bar labels ---
-    var labelStyle = { color: '#95a5a6', fontSize: '11px', fontStyle: 'bold' };
+    var labelStyle = { color: '#558b2f', fontSize: '11px', fontStyle: 'bold', fontFamily: 'Nunito, Arial' };
     this.add.text(bl.x, bl.co2Y - 13, 'CO2',  labelStyle);
     this.add.text(bl.x, bl.tmpY - 13, 'TEMP', labelStyle);
     this.add.text(bl.x, bl.qvY  - 13, 'VIDA', labelStyle);
 
     // --- Bar value texts ---
-    var valStyle = { color: '#ecf0f1', fontSize: '11px' };
+    var valStyle = { color: '#33691e', fontSize: '11px', fontFamily: 'Nunito, Arial' };
     this.hudTextos.co2Val  = this.add.text(bl.x + bl.w, bl.co2Y + 1, '---', valStyle).setOrigin(1, 0);
     this.hudTextos.tempVal = this.add.text(bl.x + bl.w, bl.tmpY + 1, '---', valStyle).setOrigin(1, 0);
     this.hudTextos.qvVal   = this.add.text(bl.x + bl.w, bl.qvY  + 1, '---', valStyle).setOrigin(1, 0);
 
     // Thin divider below HUD
     var div = this.add.graphics();
-    div.lineStyle(1, 0x2ecc71, 0.15);
+    div.lineStyle(1, 0xc8e6c9, 1.0);
     div.lineBetween(0, 108, 534, 108);
   }
 
@@ -251,7 +253,7 @@ class GameScene extends Phaser.Scene {
         this.tweens.add({ targets: this.hudTextos.orcamento, alpha: 0.3, duration: 150, yoyo: true, repeat: 2 });
         // Texto informativo
         var sem = this.add.text(267, 350, 'Sem $ para demolir!', {
-          fontSize: '16px', color: '#e74c3c', fontStyle: 'bold', fontFamily: 'Inter, Arial'
+          fontSize: '16px', color: '#e53935', fontStyle: 'bold', fontFamily: 'Nunito, Arial'
         }).setOrigin(0.5).setDepth(55);
         this.tweens.add({ targets: sem, alpha: 0, y: 300, duration: 1000, onComplete: function() { sem.destroy(); } });
         return;
@@ -268,7 +270,7 @@ class GameScene extends Phaser.Scene {
       var dx    = this.GX + col * this.TILE + this.TILE / 2;
       var dy    = this.GY + row * this.TILE + this.TILE / 2;
       var dtxt  = this.add.text(dx, dy, '-R$' + (custoDemolicao/1000) + 'k demolido', {
-        fontSize: '12px', color: '#e67e22', fontFamily: 'Inter, Arial'
+        fontSize: '12px', color: '#e65100', fontFamily: 'Nunito, Arial'
       }).setOrigin(0.5).setDepth(20);
       this.tweens.add({ targets: dtxt, y: dy - 40, alpha: 0, duration: 900,
         onComplete: function() { dtxt.destroy(); } });
@@ -317,7 +319,7 @@ class GameScene extends Phaser.Scene {
 
     // Texto flutuante com custo
     var floatTxt = this.add.text(bx, by - 10, '-R$' + (s.custo/1000) + 'k', {
-      fontSize: '13px', color: '#e74c3c', fontStyle: 'bold', fontFamily: 'Inter, Arial'
+      fontSize: '13px', color: '#e53935', fontStyle: 'bold', fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(20);
 
     this.tweens.add({
@@ -339,9 +341,10 @@ class GameScene extends Phaser.Scene {
 
     // Panel title
     this.add.text(CX, 8, 'ESTRUTURAS', {
-      color:     '#2ecc71',
-      fontSize:  '18px',
-      fontStyle: 'bold'
+      color:      '#2e7d32',
+      fontSize:   '18px',
+      fontStyle:  'bold',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5, 0);
 
     // ---- Building buttons ----
@@ -358,10 +361,10 @@ class GameScene extends Phaser.Scene {
       var cY  = by + btnH / 2;  // vertical centre of button
 
       // Button background rectangle
-      var bg = this.add.rectangle(CX, cY, btnW, btnH, 0x0f1a0f)
+      var bg = this.add.rectangle(CX, cY, btnW, btnH, 0xffffff)
         .setOrigin(0.5)
         .setInteractive()
-        .setStrokeStyle(1, 0x1e4a1e, 1);
+        .setStrokeStyle(1, 0xc8e6c9, 1);
 
       // Building preview image
       var preview = this.add.image(PX + 20, cY, s.textureKey)
@@ -370,24 +373,27 @@ class GameScene extends Phaser.Scene {
 
       // Building name
       var nameText = this.add.text(PX + 72, by + 8, s.nome, {
-        color:    '#ecf0f1',
-        fontSize: '13px',
-        fontStyle: 'bold'
+        color:      '#33691e',
+        fontSize:   '13px',
+        fontStyle:  'bold',
+        fontFamily: 'Nunito, Arial'
       });
 
       // CO2 impact
       var co2Val  = s.co2PorTurno;
       var co2Str  = (co2Val >= 0 ? '+' : '') + co2Val + ' ppm/ano';
-      var co2Col  = (co2Val <= 0) ? '#2ecc71' : '#e74c3c';
+      var co2Col  = (co2Val <= 0) ? '#43a047' : '#e53935';
       var co2Text = this.add.text(PX + 72, by + 26, co2Str, {
-        color:    co2Col,
-        fontSize: '11px'
+        color:      co2Col,
+        fontSize:   '11px',
+        fontFamily: 'Nunito, Arial'
       });
 
       // Cost
       var costText = this.add.text(PX + 72, by + 40, 'R$ ' + (s.custo / 1000) + 'k', {
-        color:    '#f9e79f',
-        fontSize: '11px'
+        color:      '#ff8f00',
+        fontSize:   '11px',
+        fontFamily: 'Nunito, Arial'
       });
 
       // Store button data
@@ -398,12 +404,12 @@ class GameScene extends Phaser.Scene {
       (function(scene, btnId, btnIndex) {
         bg.on('pointerover', function() {
           if (!scene.estruturaSelecionada || scene.estruturaSelecionada !== btnId) {
-            bg.setFillStyle(0x162816);
+            bg.setFillStyle(0xf1f8e9);
           }
         });
         bg.on('pointerout', function() {
           if (!scene.estruturaSelecionada || scene.estruturaSelecionada !== btnId) {
-            bg.setFillStyle(0x0f1a0f);
+            bg.setFillStyle(0xffffff);
           }
         });
         bg.on('pointerdown', function() {
@@ -414,24 +420,25 @@ class GameScene extends Phaser.Scene {
 
     // ---- Demolish button ----
     var demolishY  = startY + ids.length * (btnH + gap) + 8;
-    var demolishBg = this.add.rectangle(CX, demolishY + 20, 300, 40, 0x4a0a0a)
+    var demolishBg = this.add.rectangle(CX, demolishY + 20, 300, 40, 0xffebee)
       .setOrigin(0.5)
       .setInteractive()
-      .setStrokeStyle(1, 0x7a1a1a, 1);
+      .setStrokeStyle(1, 0xef9a9a, 1);
 
     var demolishText = this.add.text(CX, demolishY + 20, 'DEMOLIR', {
-      color:     '#e74c3c',
-      fontSize:  '15px',
-      fontStyle: 'bold'
+      color:      '#e53935',
+      fontSize:   '15px',
+      fontStyle:  'bold',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5);
 
     this.btnDestruir = demolishBg;
 
     demolishBg.on('pointerover', function() {
-      demolishBg.setFillStyle(0x6a1a1a);
+      demolishBg.setFillStyle(0xffcdd2);
     });
     demolishBg.on('pointerout', function() {
-      demolishBg.setFillStyle(self.modoDestrucao ? 0x8a0000 : 0x4a0a0a);
+      demolishBg.setFillStyle(self.modoDestrucao ? 0xef9a9a : 0xffebee);
     });
     demolishBg.on('pointerdown', function() {
       self.modoDestrucao = !self.modoDestrucao;
@@ -439,16 +446,16 @@ class GameScene extends Phaser.Scene {
         // Deselect building
         self.estruturaSelecionada = null;
         for (var k = 0; k < self.botoesEstrutura.length; k++) {
-          self.botoesEstrutura[k].bg.setFillStyle(0x0f1a0f);
+          self.botoesEstrutura[k].bg.setFillStyle(0xffffff);
         }
-        demolishBg.setFillStyle(0x8a0000);
-        demolishBg.setStrokeStyle(2, 0xe74c3c, 1);
-        demolishText.setStyle({ color: '#ff6b6b', fontStyle: 'bold', fontSize: '15px' });
+        demolishBg.setFillStyle(0xef9a9a);
+        demolishBg.setStrokeStyle(2, 0xe53935, 1);
+        demolishText.setStyle({ color: '#e53935', fontStyle: 'bold', fontSize: '15px', fontFamily: 'Nunito, Arial' });
         self.textoPanelInfo.setText('Modo demolir ativo — clique em uma estrutura para remover');
       } else {
-        demolishBg.setFillStyle(0x4a0a0a);
-        demolishBg.setStrokeStyle(1, 0x7a1a1a, 1);
-        demolishText.setStyle({ color: '#e74c3c', fontStyle: 'bold', fontSize: '15px' });
+        demolishBg.setFillStyle(0xffebee);
+        demolishBg.setStrokeStyle(1, 0xef9a9a, 1);
+        demolishText.setStyle({ color: '#e53935', fontStyle: 'bold', fontSize: '15px', fontFamily: 'Nunito, Arial' });
         self.textoPanelInfo.setText('Selecione uma estrutura para construir');
       }
     });
@@ -456,30 +463,33 @@ class GameScene extends Phaser.Scene {
     // ---- Budget display ----
     var budgetY = demolishY + 58;
     this.add.text(CX, budgetY, 'ORCAMENTO', {
-      color:    '#95a5a6',
-      fontSize: '12px'
+      color:      '#558b2f',
+      fontSize:   '12px',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5);
 
     this.hudTextos.orcamento = this.add.text(CX, budgetY + 18, 'R$ 800.000', {
-      color:     '#f9e79f',
-      fontSize:  '22px',
-      fontStyle: 'bold'
+      color:      '#e65100',
+      fontSize:   '22px',
+      fontStyle:  'bold',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5);
 
     // ---- Advance year button ----
     var advY  = budgetY + 60;
-    var advBg = this.add.rectangle(CX, advY + 30, 600, 60, 0x1a472a)
+    var advBg = this.add.rectangle(CX, advY + 30, 600, 60, 0x43a047)
       .setOrigin(0.5)
       .setInteractive();
 
     var advBorder = this.add.graphics();
-    advBorder.lineStyle(2, 0x2ecc71, 1);
+    advBorder.lineStyle(3, 0x2e7d32, 1);
     advBorder.strokeRect(CX - 300, advY, 600, 60);
 
     var advText = this.add.text(CX, advY + 30, 'AVANCAR 1 ANO  ->', {
-      color:     '#2ecc71',
-      fontSize:  '20px',
-      fontStyle: 'bold'
+      color:      '#ffffff',
+      fontSize:   '20px',
+      fontStyle:  'bold',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5);
 
     this.btnAvançar = advBg;
@@ -500,8 +510,9 @@ class GameScene extends Phaser.Scene {
 
     // ---- Info text ----
     this.textoPanelInfo = this.add.text(CX, 680, 'Selecione uma estrutura para construir', {
-      color:    '#5d6d7e',
-      fontSize: '12px'
+      color:      '#558b2f',
+      fontSize:   '12px',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5);
   }
 
@@ -514,21 +525,21 @@ class GameScene extends Phaser.Scene {
 
     // Reset demolish button visuals
     if (this.btnDestruir) {
-      this.btnDestruir.setFillStyle(0x4a0a0a);
-      this.btnDestruir.setStrokeStyle(1, 0x7a1a1a, 1);
+      this.btnDestruir.setFillStyle(0xffebee);
+      this.btnDestruir.setStrokeStyle(1, 0xef9a9a, 1);
     }
 
     // Reset all button backgrounds
     for (var i = 0; i < this.botoesEstrutura.length; i++) {
-      this.botoesEstrutura[i].bg.setFillStyle(0x0f1a0f);
-      this.botoesEstrutura[i].bg.setStrokeStyle(1, 0x1e4a1e, 1);
+      this.botoesEstrutura[i].bg.setFillStyle(0xffffff);
+      this.botoesEstrutura[i].bg.setStrokeStyle(1, 0xc8e6c9, 1);
     }
 
     // Highlight selected button
     for (var j = 0; j < this.botoesEstrutura.length; j++) {
       if (this.botoesEstrutura[j].id === id) {
-        this.botoesEstrutura[j].bg.setFillStyle(0x1a3a1a);
-        this.botoesEstrutura[j].bg.setStrokeStyle(2, 0x2ecc71, 1);
+        this.botoesEstrutura[j].bg.setFillStyle(0xe8f5e9);
+        this.botoesEstrutura[j].bg.setStrokeStyle(2, 0x43a047, 1);
         break;
       }
     }
@@ -583,13 +594,13 @@ class GameScene extends Phaser.Scene {
 
     // ---- 5. Flash e texto flutuante de CO₂ ----
     var deltaCO2 = this.estado.co2 - co2Antes;
-    var flash    = this.add.rectangle(267, 350, 534, 700, 0xffffff, 0.15).setDepth(50);
+    var flash    = this.add.rectangle(267, 350, 534, 700, 0xffffff, 0.25).setDepth(50);
     this.tweens.add({ targets: flash, alpha: 0, duration: 300, onComplete: function() { flash.destroy(); } });
 
     var co2Str = (deltaCO2 >= 0 ? '+' : '') + deltaCO2 + ' ppm';
-    var co2Cor = deltaCO2 <= 0 ? '#2ecc71' : '#e74c3c';
+    var co2Cor = deltaCO2 <= 0 ? '#43a047' : '#e53935';
     var co2Txt = this.add.text(267, 370, co2Str, {
-      fontSize: '22px', fontStyle: 'bold', color: co2Cor, fontFamily: 'Inter, Arial'
+      fontSize: '22px', fontStyle: 'bold', color: co2Cor, fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(55).setAlpha(0);
     this.tweens.add({
       targets: co2Txt, alpha: 1, y: 310, duration: 300, ease: 'Power2',
@@ -623,13 +634,13 @@ class GameScene extends Phaser.Scene {
     if (resultado.fim) {
       this.estado.jogoAtivo = false;
       if (this.btnAvançar) {
-        this.btnAvançar.setFillStyle(0x0a1a0a);
+        this.btnAvançar.setFillStyle(0xa5d6a7);
         this.btnAvançar.disableInteractive();
       }
       this.textoPanelInfo.setText('Simulação encerrada...');
 
       this.time.delayedCall(800, function() {
-        var cor = resultado.vitoria ? 0x2ecc71 : 0xe74c3c;
+        var cor = resultado.vitoria ? 0x43a047 : 0xe53935;
         var overlay = self.add.rectangle(600, 350, 1200, 700, cor, 0).setDepth(100);
         self.tweens.add({
           targets: overlay, alpha: 0.55, duration: 450, yoyo: true, hold: 200,
@@ -654,10 +665,10 @@ class GameScene extends Phaser.Scene {
 
     // Fundo do popup
     var bg = this.add.graphics().setDepth(200);
-    bg.fillStyle(0x0a0a14, 0.95);
-    bg.fillRect(cx - pw/2, cy - ph/2, pw, ph);
-    bg.lineStyle(2, evento.cor, 1.0);
-    bg.strokeRect(cx - pw/2, cy - ph/2, pw, ph);
+    bg.fillStyle(0xffffff, 1);
+    bg.fillRoundedRect(cx - pw/2, cy - ph/2, pw, ph, 14);
+    bg.lineStyle(3, evento.cor, 1.0);
+    bg.strokeRoundedRect(cx - pw/2, cy - ph/2, pw, ph, 14);
 
     // Ícone colorido
     var ico = this.add.graphics().setDepth(201);
@@ -666,19 +677,19 @@ class GameScene extends Phaser.Scene {
 
     // Textos
     var t1 = this.add.text(cx - pw/2 + 55, cy - 45, 'EVENTO: ' + evento.nome.toUpperCase(), {
-      fontSize: '16px', fontStyle: 'bold', color: evento.corHex, fontFamily: 'Inter, Arial'
+      fontSize: '16px', fontStyle: 'bold', color: evento.corHex, fontFamily: 'Nunito, Arial'
     }).setDepth(201);
 
     var t2 = this.add.text(cx - pw/2 + 55, cy - 20, evento.descricao, {
-      fontSize: '13px', color: '#bdc3c7', fontFamily: 'Inter, Arial'
+      fontSize: '13px', color: '#558b2f', fontFamily: 'Nunito, Arial'
     }).setDepth(201);
 
     var t3 = this.add.text(cx, cy + 25, evento.efeito, {
-      fontSize: '18px', fontStyle: 'bold', color: evento.corHex, fontFamily: 'Inter, Arial'
+      fontSize: '18px', fontStyle: 'bold', color: evento.corHex, fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(201);
 
     var t4 = this.add.text(cx, cy + 60, 'Clique para continuar...', {
-      fontSize: '11px', color: '#5d6d7e', fontFamily: 'Inter, Arial'
+      fontSize: '11px', color: '#a5d6a7', fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(201);
 
     var elementos = [bg, ico, t1, t2, t3, t4];
@@ -717,14 +728,14 @@ class GameScene extends Phaser.Scene {
     this.popupAtivo = true;
 
     var cx = 267, cy = 400, pw = 500, ph = 160;
-    var cor    = passou ? 0x2ecc71 : 0xe74c3c;
-    var corHex = passou ? '#2ecc71' : '#e74c3c';
+    var cor    = passou ? 0x43a047 : 0xe53935;
+    var corHex = passou ? '#43a047' : '#e53935';
 
     var bg = this.add.graphics().setDepth(200);
-    bg.fillStyle(0x0a0a14, 0.95);
-    bg.fillRect(cx - pw/2, cy - ph/2, pw, ph);
-    bg.lineStyle(2, cor, 1.0);
-    bg.strokeRect(cx - pw/2, cy - ph/2, pw, ph);
+    bg.fillStyle(0xffffff, 1);
+    bg.fillRoundedRect(cx - pw/2, cy - ph/2, pw, ph, 14);
+    bg.lineStyle(3, cor, 1.0);
+    bg.strokeRoundedRect(cx - pw/2, cy - ph/2, pw, ph, 14);
 
     var titulo  = passou ? 'META ' + meta.ano + ' ATINGIDA!' : 'META ' + meta.ano + ' PERDIDA!';
     var sub1    = meta.descricao;
@@ -733,19 +744,19 @@ class GameScene extends Phaser.Scene {
       : '-' + meta.penalidade + ' pontos de penalidade';
 
     var t1 = this.add.text(cx, cy - 45, titulo, {
-      fontSize: '20px', fontStyle: 'bold', color: corHex, fontFamily: 'Inter, Arial'
+      fontSize: '20px', fontStyle: 'bold', color: corHex, fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(201);
 
     var t2 = this.add.text(cx, cy - 10, 'Meta: ' + sub1, {
-      fontSize: '14px', color: '#bdc3c7', fontFamily: 'Inter, Arial'
+      fontSize: '14px', color: '#558b2f', fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(201);
 
     var t3 = this.add.text(cx, cy + 25, sub2, {
-      fontSize: '16px', fontStyle: 'bold', color: corHex, fontFamily: 'Inter, Arial'
+      fontSize: '16px', fontStyle: 'bold', color: corHex, fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(201);
 
     var t4 = this.add.text(cx, cy + 60, 'Clique para continuar...', {
-      fontSize: '11px', color: '#5d6d7e', fontFamily: 'Inter, Arial'
+      fontSize: '11px', color: '#a5d6a7', fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5).setDepth(201);
 
     var elementos = [bg, t1, t2, t3, t4];
@@ -785,7 +796,7 @@ class GameScene extends Phaser.Scene {
 
     // --- CO2 bar ---
     var co2Pct = Phaser.Math.Clamp((this.estado.co2 - 280) / (560 - 280), 0, 1);
-    var co2Col = (co2Pct < 0.4) ? 0x2ecc71 : (co2Pct < 0.7 ? 0xf39c12 : 0xe74c3c);
+    var co2Col = (co2Pct < 0.4) ? 0x43a047 : (co2Pct < 0.7 ? 0xf39c12 : 0xe53935);
     var co2Target = co2Pct * BAR_W;
     this.hudTextos.co2Val.setText(this.estado.co2 + ' ppm');
 
@@ -805,7 +816,7 @@ class GameScene extends Phaser.Scene {
 
     // --- Temperature bar ---
     var tmpPct = Phaser.Math.Clamp((this.estado.temperatura - 1.0) / (2.0 - 1.0), 0, 1);
-    var tmpCol = (tmpPct < 0.4) ? 0x2ecc71 : (tmpPct < 0.7 ? 0xf39c12 : 0xe74c3c);
+    var tmpCol = (tmpPct < 0.4) ? 0x43a047 : (tmpPct < 0.7 ? 0xf39c12 : 0xe53935);
     var tmpTarget = tmpPct * BAR_W;
     this.hudTextos.tempVal.setText('+' + this.estado.temperatura.toFixed(1) + 'C');
 
@@ -825,7 +836,7 @@ class GameScene extends Phaser.Scene {
 
     // --- Quality of Life bar ---
     var qvPct    = Phaser.Math.Clamp(this.estado.qualidadeVida / 100, 0, 1);
-    var qvCol    = (qvPct > 0.6) ? 0x2ecc71 : (qvPct > 0.3 ? 0xf39c12 : 0xe74c3c);
+    var qvCol    = (qvPct > 0.6) ? 0x43a047 : (qvPct > 0.3 ? 0xf39c12 : 0xe53935);
     var qvTarget = qvPct * BAR_W;
     this.hudTextos.qvVal.setText(Math.round(this.estado.qualidadeVida) + '%');
 
@@ -847,7 +858,7 @@ class GameScene extends Phaser.Scene {
     if (this.estado.temperatura >= 1.7 && this.estado.jogoAtivo) {
       if (!this.dangerOverlay) {
         this.dangerOverlay = this.add.graphics().setDepth(90);
-        this.dangerOverlay.lineStyle(6, 0xe74c3c, 0.9);
+        this.dangerOverlay.lineStyle(6, 0xe53935, 0.9);
         this.dangerOverlay.strokeRect(3, 3, 528, 694);
       }
       if (!this.dangerTween) {
