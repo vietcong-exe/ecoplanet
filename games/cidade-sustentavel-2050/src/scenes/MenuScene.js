@@ -4,220 +4,236 @@ class MenuScene extends Phaser.Scene {
   }
 
   create() {
-    this.criarFundo();
-    this.criarSilhuetaCidade();
-    this.criarEstrelas();
-    this.criarParticulas();
+    this.criarCeu();
+    this.criarSol();
+    this.criarNuvens();
+    this.criarCidade();
+    this.criarGrama();
     this.criarUI();
     this.criarBotaoJogar();
     this.criarAnimacoes();
   }
 
-  criarFundo() {
-    // Sky gradient strips (back to front)
-    this.add.rectangle(600, 120, 1200, 240, 0x0f0f1a).setOrigin(0.5, 0.5);
-    this.add.rectangle(600, 360, 1200, 240, 0x0d1a2a).setOrigin(0.5, 0.5);
-    this.add.rectangle(600, 590, 1200, 220, 0x0a1a15).setOrigin(0.5, 0.5);
+  criarCeu() {
+    var sky = this.add.graphics();
+    // Gradiente: azul escuro no topo → azul claro no horizonte
+    sky.fillGradientStyle(0x1565c0, 0x1565c0, 0x81d4fa, 0x81d4fa, 1, 1, 1, 1);
+    sky.fillRect(0, 0, 1200, 700);
   }
 
-  criarSilhuetaCidade() {
-    // Building definitions: [x, y_top, width, height]
-    var buildings = [
-      [30,  580, 60,  120],
-      [110, 560, 50,  140],
-      [175, 590, 70,   90],
-      [255, 540, 45,  160],
-      [320, 570, 80,  130],
-      [420, 550, 55,  150],
-      [495, 580, 65,   90],
-      [590, 530, 75,  170],
-      [685, 560, 50,  140],
-      [755, 545, 80,  155],
-      [855, 575, 60,  125],
-      [935, 555, 45,  145],
-      [1000,580, 70,  100],
-      [1085,560, 55,  140],
-      [1150,575, 60,  125]
+  criarSol() {
+    var g = this.add.graphics();
+    // Brilho externo
+    g.fillStyle(0xffd600, 0.12);
+    g.fillCircle(1055, 78, 80);
+    // Brilho médio
+    g.fillStyle(0xffd600, 0.20);
+    g.fillCircle(1055, 78, 62);
+    // Sol
+    g.fillStyle(0xffd600, 1);
+    g.fillCircle(1055, 78, 46);
+  }
+
+  criarNuvens() {
+    var g = this.add.graphics();
+    this._nuvem(g, 170, 100, 1.0);
+    this._nuvem(g, 860, 75,  0.75);
+    this._nuvem(g, 575, 130, 0.60);
+  }
+
+  _nuvem(g, cx, cy, alpha) {
+    g.fillStyle(0xffffff, alpha);
+    g.fillRoundedRect(cx - 58, cy, 116, 30, 15);
+    g.fillCircle(cx - 22, cy,  22);
+    g.fillCircle(cx +  8, cy - 6, 28);
+    g.fillCircle(cx + 38, cy,  18);
+  }
+
+  criarCidade() {
+    var cores = [
+      0xe65100, 0x43a047, 0x1565c0, 0x6a1b9a,
+      0xc62828, 0x00838f, 0xf57f17, 0x2e7d32,
+      0x283593, 0x558b2f, 0xe65100, 0x43a047,
+      0x1565c0, 0x6a1b9a, 0x00838f
     ];
 
-    var buildingGraphics = this.add.graphics();
+    var predios = [
+      [20,  490, 65,  210],
+      [95,  468, 55,  232],
+      [160, 502, 78,  198],
+      [248, 448, 52,  252],
+      [308, 478, 88,  222],
+      [404, 458, 60,  242],
+      [472, 498, 72,  202],
+      [552, 438, 82,  262],
+      [642, 468, 56,  232],
+      [706, 452, 88,  248],
+      [802, 490, 66,  210],
+      [876, 462, 52,  238],
+      [936, 498, 76,  202],
+      [1020,472, 62,  228],
+      [1090,484, 82,  216]
+    ];
 
-    for (var i = 0; i < buildings.length; i++) {
-      var b = buildings[i];
-      var bx = b[0];
-      var by = b[1];
-      var bw = b[2];
-      var bh = b[3];
+    var g = this.add.graphics();
 
-      // Building body
-      buildingGraphics.fillStyle(0x0d1f12, 1);
-      buildingGraphics.fillRect(bx, by, bw, bh);
+    for (var i = 0; i < predios.length; i++) {
+      var p = predios[i];
+      var px = p[0], py = p[1], pw = p[2], ph = p[3];
+      var cor = cores[i % cores.length];
 
-      // Scatter windows on this building
-      var numWindows = Math.floor(bw / 12) * Math.floor(bh / 14);
-      numWindows = Math.min(numWindows, 12);
+      // Corpo do prédio
+      g.fillStyle(cor, 1);
+      g.fillRect(px, py, pw, ph);
 
-      for (var w = 0; w < numWindows; w++) {
-        var wx = bx + 4 + Math.random() * (bw - 10);
-        var wy = by + 6 + Math.random() * (bh - 14);
-        var alpha = 0.3 + Math.random() * 0.3; // 0.3 to 0.6, some dim
-        if (Math.random() > 0.45) {
-          // Lit window
-          buildingGraphics.fillStyle(0x1abc9c, alpha);
-          buildingGraphics.fillRect(wx, wy, 3, 4);
+      // Sombra lateral direita
+      g.fillStyle(0x000000, 0.15);
+      g.fillRect(px + pw - 6, py, 6, ph);
+
+      // Janelas
+      g.fillStyle(0xffffff, 0.55);
+      for (var wy = py + 10; wy < py + ph - 8; wy += 20) {
+        for (var wx = px + 7; wx < px + pw - 7; wx += 14) {
+          if (Math.random() > 0.35) {
+            g.fillRect(wx, wy, 5, 7);
+          }
         }
-        // else: dark window (not drawn)
       }
-    }
 
-    // Ground fill below buildings
-    buildingGraphics.fillStyle(0x0a1a10, 1);
-    buildingGraphics.fillRect(0, 700 - 40, 1200, 40);
-  }
-
-  criarEstrelas() {
-    this.estrelas = [];
-
-    for (var i = 0; i < 35; i++) {
-      var sx = Math.random() * 1200;
-      var sy = Math.random() * 290;
-      var alpha = 0.3 + Math.random() * 0.5;
-
-      var star = this.add.circle(sx, sy, 1, 0xffffff, alpha);
-      this.estrelas.push(star);
+      // Topo do prédio (detalhe)
+      g.fillStyle(0xffffff, 0.20);
+      g.fillRect(px, py, pw, 5);
     }
   }
 
-  criarParticulas() {
-    // Static atmospheric green particles
-    for (var i = 0; i < 20; i++) {
-      var px = 50 + Math.random() * 1100;
-      var py = 300 + Math.random() * 200;
-      var pr = 2 + Math.random() * 2;
-      var palpha = 0.1 + Math.random() * 0.2;
-
-      this.add.circle(px, py, pr, 0x2ecc71, palpha);
-    }
+  criarGrama() {
+    var g = this.add.graphics();
+    g.fillStyle(0x2e7d32, 1);
+    g.fillRect(0, 648, 1200, 52);
+    g.fillStyle(0x4caf50, 1);
+    g.fillRect(0, 638, 1200, 16);
+    g.fillStyle(0x66bb6a, 1);
+    g.fillRect(0, 634, 1200, 8);
   }
 
   criarUI() {
-    // ODS Badge background
-    this.add.rectangle(600, 120, 220, 45, 0x1a472a).setOrigin(0.5, 0.5);
-    this.add.text(600, 120, 'ODS 13 — AÇÃO CLIMÁTICA', {
+    // Badge ODS
+    var badge = this.add.graphics();
+    badge.fillStyle(0xff8f00, 1);
+    badge.fillRoundedRect(486, 92, 228, 40, 20);
+    this.add.text(600, 112, 'ODS 13 — AÇÃO CLIMÁTICA', {
       fontSize: '13px',
-      color: '#2ecc71',
-      fontFamily: 'Inter, Arial'
+      color: '#ffffff',
+      fontFamily: 'Nunito, Arial',
+      fontStyle: 'bold'
     }).setOrigin(0.5, 0.5);
 
-    // Main title — "CIDADE"
-    this.tituloCidade = this.add.text(600, 205, 'CIDADE', {
-      fontSize: '72px',
+    // Título "CIDADE"
+    this.tituloCidade = this.add.text(600, 196, 'CIDADE', {
+      fontSize: '74px',
       color: '#ffffff',
       fontStyle: 'bold',
-      fontFamily: 'Inter, Arial'
+      fontFamily: 'Nunito, Arial',
+      stroke: '#0d47a1',
+      strokeThickness: 5
     }).setOrigin(0.5, 0.5).setAlpha(0);
 
-    // Main title — "SUSTENTÁVEL 2050"
-    this.tituloSustentavel = this.add.text(600, 270, 'SUSTENTÁVEL 2050', {
-      fontSize: '52px',
-      color: '#2ecc71',
+    // Título "SUSTENTÁVEL 2050"
+    this.tituloSustentavel = this.add.text(600, 265, 'SUSTENTÁVEL 2050', {
+      fontSize: '48px',
+      color: '#ffd600',
       fontStyle: 'bold',
-      fontFamily: 'Inter, Arial'
+      fontFamily: 'Nunito, Arial',
+      stroke: '#e65100',
+      strokeThickness: 3
     }).setOrigin(0.5, 0.5).setAlpha(0);
 
-    // Subtitle
-    this.add.text(600, 320, 'Um jogo sobre mudanças climáticas', {
-      fontSize: '18px',
-      color: '#95a5a6',
-      fontFamily: 'Inter, Arial'
+    // Subtítulo
+    this.add.text(600, 308, 'Um jogo sobre mudanças climáticas', {
+      fontSize: '16px',
+      color: '#e3f2fd',
+      fontFamily: 'Nunito, Arial',
+      fontStyle: 'bold'
     }).setOrigin(0.5, 0.5);
 
-    // Divider line
-    var divider = this.add.graphics();
-    divider.lineStyle(1, 0x2ecc71, 0.4);
-    divider.lineBetween(400, 345, 800, 345);
+    // Painel semi-transparente para as linhas de info
+    var panel = this.add.graphics();
+    panel.fillStyle(0xffffff, 0.15);
+    panel.fillRoundedRect(340, 324, 520, 90, 14);
 
-    // Info text block
-    this.add.text(600, 370, 'Você é o prefeito de uma cidade em 2024.', {
-      fontSize: '15px',
-      color: '#bdc3c7',
-      fontFamily: 'Inter, Arial'
+    this.add.text(600, 345, 'Você é o prefeito de uma cidade em 2024.', {
+      fontSize: '14px',
+      color: '#ffffff',
+      fontFamily: 'Nunito, Arial',
+      fontStyle: 'bold'
     }).setOrigin(0.5, 0.5);
 
-    this.add.text(600, 393, 'Construa com sabedoria. Salve o clima até 2050.', {
-      fontSize: '15px',
-      color: '#bdc3c7',
-      fontFamily: 'Inter, Arial'
+    this.add.text(600, 368, 'Construa com sabedoria. Salve o clima até 2050.', {
+      fontSize: '14px',
+      color: '#ffffff',
+      fontFamily: 'Nunito, Arial',
+      fontStyle: 'bold'
     }).setOrigin(0.5, 0.5);
 
-    this.add.text(600, 416, 'Meta: temperatura ≤ +1.5°C | CO₂ ≤ 350 ppm', {
-      fontSize: '15px',
-      color: '#bdc3c7',
-      fontFamily: 'Inter, Arial'
+    this.add.text(600, 391, 'Meta: temperatura ≤ +1.5°C | CO₂ ≤ 350 ppm', {
+      fontSize: '14px',
+      color: '#fff9c4',
+      fontFamily: 'Nunito, Arial',
+      fontStyle: 'bold'
     }).setOrigin(0.5, 0.5);
 
     // Footer
-    this.add.text(600, 650, 'UNINASSAU — Lógica de Programação — 2026', {
+    this.add.text(600, 668, 'UNINASSAU — Lógica de Programação — 2026', {
       fontSize: '11px',
-      color: '#4a4a5a',
-      fontFamily: 'Inter, Arial'
+      color: '#a5d6a7',
+      fontFamily: 'Nunito, Arial'
     }).setOrigin(0.5, 0.5);
   }
 
   criarBotaoJogar() {
-    // Button background rectangle
-    this.botaoRect = this.add.rectangle(600, 510, 260, 62, 0x1a472a)
-      .setOrigin(0.5, 0.5)
-      .setInteractive();
-
-    // Button border
-    this.botaoBorda = this.add.graphics();
-    this.botaoBorda.lineStyle(2, 0x2ecc71, 1.0);
-    this.botaoBorda.strokeRect(600 - 130, 510 - 31, 260, 62);
-
-    // Button text
-    this.botaoTexto = this.add.text(600, 510, '▶  JOGAR', {
-      fontSize: '26px',
-      color: '#2ecc71',
-      fontStyle: 'bold',
-      fontFamily: 'Inter, Arial'
-    }).setOrigin(0.5, 0.5);
-
-    // Hover interactions
     var self = this;
 
-    this.botaoRect.on('pointerover', function () {
-      self.tweens.add({
-        targets: [self.botaoRect, self.botaoTexto],
-        scaleX: 1.05,
-        scaleY: 1.05,
-        duration: 150,
-        ease: 'Power2'
-      });
-      self.botaoRect.setFillStyle(0x27ae60);
-      self.botaoBorda.clear();
-      self.botaoBorda.lineStyle(2, 0x2ecc71, 1.0);
-      self.botaoBorda.strokeRect((600 - 130) * 1, (510 - 31) * 1, 260, 62);
+    // Sombra do botão
+    this.add.graphics()
+      .fillStyle(0x2e7d32, 1)
+      .fillRoundedRect(470, 432, 260, 58, 30);
+
+    // Fundo do botão
+    this.botaoFundo = this.add.graphics();
+    this.botaoFundo.fillStyle(0x43a047, 1);
+    this.botaoFundo.fillRoundedRect(470, 426, 260, 58, 30);
+
+    // Texto do botão
+    this.botaoTexto = this.add.text(600, 455, '▶  JOGAR', {
+      fontSize: '26px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      fontFamily: 'Nunito, Arial'
+    }).setOrigin(0.5, 0.5);
+
+    // Área de clique invisível
+    var hitArea = this.add.rectangle(600, 455, 260, 58, 0x000000, 0)
+      .setOrigin(0.5, 0.5)
+      .setInteractive({ useHandCursor: true });
+
+    hitArea.on('pointerover', function () {
+      self.botaoFundo.clear();
+      self.botaoFundo.fillStyle(0x66bb6a, 1);
+      self.botaoFundo.fillRoundedRect(470, 423, 260, 58, 30);
     });
 
-    this.botaoRect.on('pointerout', function () {
-      self.tweens.add({
-        targets: [self.botaoRect, self.botaoTexto],
-        scaleX: 1.0,
-        scaleY: 1.0,
-        duration: 150,
-        ease: 'Power2'
-      });
-      self.botaoRect.setFillStyle(0x1a472a);
+    hitArea.on('pointerout', function () {
+      self.botaoFundo.clear();
+      self.botaoFundo.fillStyle(0x43a047, 1);
+      self.botaoFundo.fillRoundedRect(470, 426, 260, 58, 30);
     });
 
-    this.botaoRect.on('pointerdown', function () {
+    hitArea.on('pointerdown', function () {
       self.scene.start('GameScene');
     });
   }
 
   criarAnimacoes() {
-    // Title "CIDADE" fade in
     this.tweens.add({
       targets: this.tituloCidade,
       alpha: 1,
@@ -225,7 +241,6 @@ class MenuScene extends Phaser.Scene {
       ease: 'Power2'
     });
 
-    // Title "SUSTENTÁVEL 2050" fade in with delay
     this.tweens.add({
       targets: this.tituloSustentavel,
       alpha: 1,
@@ -234,29 +249,13 @@ class MenuScene extends Phaser.Scene {
       delay: 400
     });
 
-    // Button text pulse (yoyo infinite)
     this.tweens.add({
       targets: this.botaoTexto,
-      alpha: 0.7,
+      alpha: 0.75,
       duration: 1200,
       ease: 'Sine.easeInOut',
       yoyo: true,
       repeat: -1
     });
-
-    // Twinkling stars — pick 5 random stars
-    var twinkling = Phaser.Utils.Array.Shuffle(this.estrelas.slice()).slice(0, 5);
-
-    for (var i = 0; i < twinkling.length; i++) {
-      this.tweens.add({
-        targets: twinkling[i],
-        alpha: 0.9,
-        duration: 1500 + Math.random() * 1500,
-        ease: 'Sine.easeInOut',
-        yoyo: true,
-        repeat: -1,
-        delay: Math.random() * 1000
-      });
-    }
   }
 }
