@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reciclador | EcoPlanet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Nunito', Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #1b5e20 0%, #43a047 50%, #a5d6a7 100%);
+      display: flex; flex-direction: column; align-items: center; padding: 16px;
+    }
+    #btn-hub {
+      position: fixed; top: 12px; left: 12px; z-index: 9999;
+      background: #fff; border: none; color: #2e7d32;
+      font-family: 'Nunito',Arial,sans-serif; font-size: 13px; font-weight: 800;
+      padding: 7px 16px; border-radius: 50px; cursor: pointer;
+      box-shadow: 0 4px 0 #00000020; display: flex; align-items: center; gap: 6px; transition: transform 0.1s;
+    }
+    #btn-hub:hover { transform: translateY(-1px); }
+    /* Auth gate */
+    #auth-gate { position: fixed; inset: 0; background: rgba(0,50,10,0.60); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); }
+    .gate-card { background: #fff; border: 2px solid #a5d6a7; border-radius: 24px; padding: 40px 44px; max-width: 380px; width: 90%; text-align: center; box-shadow: 0 10px 0 #2e7d3255; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .gate-icon { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg,#43a047,#66bb6a); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 0 #2e7d32; }
+    .gate-icon i { color: #fff; font-size: 30px; }
+    .gate-title { font-size: 22px; font-weight: 900; color: #2e7d32; }
+    .gate-sub { font-size: 14px; font-weight: 700; color: #558b2f; line-height: 1.6; }
+    .gate-btn { background: linear-gradient(180deg,#66bb6a,#43a047); border: none; border-radius: 50px; padding: 12px 32px; font-family: 'Nunito',Arial,sans-serif; font-size: 15px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 5px 0 #2e7d32; transition: transform 0.1s; }
+    .gate-btn:hover { transform: translateY(-2px); }
+    /* Telas */
+    .tela { width: 100%; max-width: 680px; display: flex; flex-direction: column; align-items: center; }
+    /* Início */
+    .card-branco { background: #fff; border-radius: 24px; padding: 36px; text-align: center; box-shadow: 0 8px 0 #1b5e2055; width: 100%; }
+    /* Header HUD */
+    .hud { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; color: #fff; }
+    .hud-item { text-align: center; }
+    .hud-val { font-size: 22px; font-weight: 900; }
+    .hud-lbl { font-size: 11px; font-weight: 800; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px; }
+    .timer-wrap { width: 100%; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50px; margin-bottom: 14px; overflow: hidden; }
+    .timer-bar { height: 100%; background: #ffd600; border-radius: 50px; transition: width 1s linear, background 0.5s; }
+    /* Item Card */
+    .item-card {
+      background: #fff; border-radius: 24px; padding: 32px 40px;
+      text-align: center; width: 100%; margin-bottom: 16px;
+      box-shadow: 0 8px 0 #1b5e2033;
+      transition: transform 0.15s;
+    }
+    .item-card.correto { animation: flashVerde 0.4s; }
+    .item-card.errado  { animation: flashVermelho 0.4s; }
+    @keyframes flashVerde    { 0%,100% { background:#fff; } 50% { background:#e8f5e9; } }
+    @keyframes flashVermelho { 0%,100% { background:#fff; } 50% { background:#ffebee; } }
+    .item-icone-wrap { width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+    .item-icone-wrap i { font-size: 40px; color: #fff; }
+    .item-nome { font-size: 22px; font-weight: 900; color: #1b5e20; }
+    .item-feedback { font-size: 14px; font-weight: 700; height: 20px; margin-top: 8px; }
+    /* Lixeiras */
+    .lixeiras { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; width: 100%; margin-bottom: 12px; }
+    .lixeira-btn {
+      border: none; border-radius: 20px; padding: 16px 8px;
+      font-family: 'Nunito',Arial,sans-serif; font-size: 12px; font-weight: 900;
+      color: #fff; cursor: pointer; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .lixeira-btn:hover:not(:disabled) { transform: translateY(-3px); }
+    .lixeira-btn:active:not(:disabled) { transform: translateY(1px); }
+    .lixeira-btn:disabled { opacity: 0.5; cursor: default; }
+    .lixeira-btn i { font-size: 28px; }
+    .lixeira-btn .lbl { font-size: 13px; font-weight: 900; }
+    .lixeira-btn .desc { font-size: 10px; font-weight: 700; opacity: 0.85; }
+    .lixeira-btn.organico  { background: linear-gradient(180deg,#66bb6a,#388e3c); box-shadow: 0 5px 0 #1b5e20; }
+    .lixeira-btn.reciclavel{ background: linear-gradient(180deg,#42a5f5,#1565c0); box-shadow: 0 5px 0 #0d47a1; }
+    .lixeira-btn.lixo      { background: linear-gradient(180deg,#ef5350,#c62828); box-shadow: 0 5px 0 #7f0000; }
+    .lixeira-btn.destaque-certo  { box-shadow: 0 0 0 4px #ffd600, 0 5px 0 #1b5e20; }
+    /* Resultado */
+    .btn-jogo { background: linear-gradient(180deg,#66bb6a,#43a047); border: none; border-radius: 50px; padding: 13px 32px; font-family: 'Nunito',Arial,sans-serif; font-size: 15px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 5px 0 #2e7d32; transition: transform 0.1s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-jogo:hover { transform: translateY(-2px); }
+    .btn-jogo.azul { background: linear-gradient(180deg,#42a5f5,#1565c0); box-shadow: 0 5px 0 #0d47a1; }
+    #folha-toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #43a047; color: #fff; font-family: 'Nunito',Arial,sans-serif; font-size: 15px; font-weight: 900; padding: 14px 28px; border-radius: 50px; box-shadow: 0 6px 0 #2e7d32; display: none; z-index: 9000; align-items: center; gap: 10px; white-space: nowrap; }
+    .spacer { height: 60px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div id="btn-hub" onclick="window.location.href='../../index.html'">
+  <i class="fa-solid fa-arrow-left"></i> EcoPlanet
+</div>
+
+<div id="auth-gate">
+  <div class="gate-card">
+    <div class="gate-icon"><i class="fa-solid fa-lock"></i></div>
+    <div class="gate-title">Login necessário!</div>
+    <div class="gate-sub">Você precisa estar logado para jogar.</div>
+    <button class="gate-btn" onclick="window.location.href='../../index.html'">
+      <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Fazer Login
+    </button>
+  </div>
+</div>
+
+<div id="folha-toast"><i class="fa-solid fa-leaf"></i> <span id="toast-txt">Folha conquistada!</span></div>
+
+<!-- ── Tela Início ── -->
+<div id="tela-inicio" class="tela">
+  <div class="spacer"></div>
+  <div class="card-branco">
+    <div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#43a047,#66bb6a);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 6px 0 #2e7d32">
+      <i class="fa-solid fa-recycle" style="color:#fff;font-size:34px"></i>
+    </div>
+    <div style="font-size:26px;font-weight:900;color:#1b5e20;margin-bottom:6px">Reciclador</div>
+    <div style="font-size:14px;font-weight:700;color:#388e3c;margin-bottom:20px">Classifique o lixo nas lixeiras certas!</div>
+    <div style="background:#e8f5e9;border-radius:16px;padding:16px;margin-bottom:22px;text-align:left">
+      <div style="font-size:13px;font-weight:900;color:#2e7d32;margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> Como jogar</div>
+      <p style="font-size:13px;color:#388e3c;font-weight:700;line-height:1.9">
+        15 itens · 90 segundos no total<br>
+        Clique na lixeira correta para cada item<br>
+        Acerte 12 ou mais e ganhe uma Folha
+      </p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:22px">
+      <div style="background:#e8f5e9;border-radius:14px;padding:12px 6px;text-align:center">
+        <i class="fa-solid fa-leaf" style="color:#388e3c;font-size:22px;margin-bottom:4px;display:block"></i>
+        <div style="font-size:11px;font-weight:900;color:#2e7d32">ORGÂNICO</div>
+        <div style="font-size:10px;color:#558b2f;font-weight:700">restos de comida</div>
+      </div>
+      <div style="background:#e3f2fd;border-radius:14px;padding:12px 6px;text-align:center">
+        <i class="fa-solid fa-recycle" style="color:#1565c0;font-size:22px;margin-bottom:4px;display:block"></i>
+        <div style="font-size:11px;font-weight:900;color:#1565c0">RECICLÁVEL</div>
+        <div style="font-size:10px;color:#1976d2;font-weight:700">papel, plástico, vidro</div>
+      </div>
+      <div style="background:#ffebee;border-radius:14px;padding:12px 6px;text-align:center">
+        <i class="fa-solid fa-trash" style="color:#c62828;font-size:22px;margin-bottom:4px;display:block"></i>
+        <div style="font-size:11px;font-weight:900;color:#c62828">LIXO</div>
+        <div style="font-size:10px;color:#b71c1c;font-weight:700">não reciclável</div>
+      </div>
+    </div>
+    <button class="btn-jogo" onclick="iniciarJogo()">
+      <i class="fa-solid fa-play"></i> Começar!
+    </button>
+  </div>
+</div>
+
+<!-- ── Tela Jogo ── -->
+<div id="tela-jogo" class="tela" style="display:none">
+  <div class="spacer"></div>
+  <div class="hud">
+    <div class="hud-item"><div class="hud-val" id="hud-timer">1:30</div><div class="hud-lbl">Tempo</div></div>
+    <div class="hud-item"><div class="hud-val" id="hud-progresso">1/15</div><div class="hud-lbl">Progresso</div></div>
+    <div class="hud-item"><div class="hud-val" id="hud-score">0</div><div class="hud-lbl">Acertos</div></div>
+  </div>
+  <div class="timer-wrap"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+  <div class="item-card" id="item-card">
+    <div class="item-icone-wrap" id="item-icone-wrap">
+      <i class="fa-solid fa-leaf" id="item-icone" style="font-size:40px;color:#fff"></i>
+    </div>
+    <div class="item-nome" id="item-nome">Carregando...</div>
+    <div class="item-feedback" id="item-feedback"></div>
+  </div>
+  <div class="lixeiras">
+    <button class="lixeira-btn organico" id="bin-organico" onclick="classificar('organico')">
+      <i class="fa-solid fa-leaf"></i>
+      <span class="lbl">ORGÂNICO</span>
+      <span class="desc">comida e plantas</span>
+    </button>
+    <button class="lixeira-btn reciclavel" id="bin-reciclavel" onclick="classificar('reciclavel')">
+      <i class="fa-solid fa-recycle"></i>
+      <span class="lbl">RECICLÁVEL</span>
+      <span class="desc">papel, vidro, metal</span>
+    </button>
+    <button class="lixeira-btn lixo" id="bin-lixo" onclick="classificar('lixo')">
+      <i class="fa-solid fa-trash"></i>
+      <span class="lbl">LIXO</span>
+      <span class="desc">não reciclável</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── Tela Resultado ── -->
+<div id="tela-resultado" class="tela" style="display:none">
+  <div class="spacer"></div>
+  <div class="card-branco">
+    <div id="res-icone" style="margin-bottom:16px"></div>
+    <div id="res-titulo" style="font-size:26px;font-weight:900;margin-bottom:6px"></div>
+    <div id="res-sub" style="font-size:14px;font-weight:700;margin-bottom:22px"></div>
+    <div style="background:#e8f5e9;border-radius:20px;padding:22px;margin-bottom:22px">
+      <div style="font-size:12px;font-weight:900;color:#558b2f;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">Resultado</div>
+      <div id="res-score" style="font-size:52px;font-weight:900;color:#2e7d32">0</div>
+      <div id="res-detalhe" style="font-size:14px;font-weight:700;color:#558b2f"></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-jogo" onclick="iniciarJogo()"><i class="fa-solid fa-rotate"></i> Jogar de novo</button>
+      <button class="btn-jogo azul" onclick="window.location.href='../../index.html'"><i class="fa-solid fa-house"></i> Hub</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../auth/supabase.js"></script>
+<script>
+// Auth gate
+(function () {
+  if (!window._supabase) { document.getElementById('auth-gate').style.display = 'none'; return; }
+  window._supabase.auth.getSession().then(function (r) {
+    if (r.data && r.data.session) document.getElementById('auth-gate').style.display = 'none';
+  }).catch(function () { document.getElementById('auth-gate').style.display = 'none'; });
+})();
+
+// ── Itens ────────────────────────────────────────────────────────────────────
+var ITENS = [
+  { nome: "Casca de Banana",    icone: "fa-leaf",       bg: "#388e3c", categoria: "organico"  },
+  { nome: "Jornal",             icone: "fa-newspaper",  bg: "#1565c0", categoria: "reciclavel"},
+  { nome: "Garrafa PET",        icone: "fa-bottle-water",bg:"#1976d2", categoria: "reciclavel"},
+  { nome: "Resto de Comida",    icone: "fa-utensils",   bg: "#2e7d32", categoria: "organico"  },
+  { nome: "Lata de Alumínio",   icone: "fa-recycle",    bg: "#0d47a1", categoria: "reciclavel"},
+  { nome: "Pilha Usada",        icone: "fa-bolt",       bg: "#c62828", categoria: "lixo"      },
+  { nome: "Caixa de Papelão",   icone: "fa-box",        bg: "#1565c0", categoria: "reciclavel"},
+  { nome: "Folha de Árvore",    icone: "fa-seedling",   bg: "#43a047", categoria: "organico"  },
+  { nome: "Fralda Usada",       icone: "fa-ban",        bg: "#b71c1c", categoria: "lixo"      },
+  { nome: "Folha de Papel",     icone: "fa-file",       bg: "#1976d2", categoria: "reciclavel"},
+  { nome: "Ponta de Cigarro",   icone: "fa-triangle-exclamation", bg: "#c62828", categoria: "lixo" },
+  { nome: "Casca de Laranja",   icone: "fa-lemon",      bg: "#388e3c", categoria: "organico"  },
+  { nome: "Garrafa de Vidro",   icone: "fa-wine-glass", bg: "#1565c0", categoria: "reciclavel"},
+  { nome: "Espelho Quebrado",   icone: "fa-circle-xmark",bg:"#b71c1c", categoria: "lixo"      },
+  { nome: "Borra de Café",      icone: "fa-mug-hot",    bg: "#2e7d32", categoria: "organico"  }
+];
+
+// ── Estado ───────────────────────────────────────────────────────────────────
+var itens = [];
+var itemAtual = 0;
+var acertos = 0;
+var timerTotal = 90;
+var timerRestante = 90;
+var timerInterval = null;
+var aguardando = false;
+
+function mostrarTela(id) {
+  ['tela-inicio','tela-jogo','tela-resultado'].forEach(function(t) {
+    document.getElementById(t).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'flex';
+}
+
+function embaralhar(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function iniciarJogo() {
+  itemAtual = 0; acertos = 0; timerRestante = timerTotal; aguardando = false;
+  itens = embaralhar(ITENS);
+  mostrarTela('tela-jogo');
+  atualizarHUD();
+  carregarItem();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    timerRestante--;
+    atualizarHUD();
+    if (timerRestante <= 0) {
+      clearInterval(timerInterval);
+      mostrarResultado();
+    }
+  }, 1000);
+}
+
+function atualizarHUD() {
+  var m = Math.floor(timerRestante / 60);
+  var s = timerRestante % 60;
+  document.getElementById('hud-timer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  document.getElementById('hud-progresso').textContent = Math.min(itemAtual+1, itens.length) + '/' + itens.length;
+  document.getElementById('hud-score').textContent = acertos;
+  var pct = (timerRestante / timerTotal) * 100;
+  var bar = document.getElementById('timer-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = timerRestante > 45 ? '#ffd600' : (timerRestante > 20 ? '#ff9800' : '#e53935');
+}
+
+function carregarItem() {
+  if (itemAtual >= itens.length) { clearInterval(timerInterval); mostrarResultado(); return; }
+  var item = itens[itemAtual];
+  document.getElementById('item-icone-wrap').style.background = 'linear-gradient(135deg, ' + item.bg + ', ' + item.bg + 'cc)';
+  document.getElementById('item-icone-wrap').style.boxShadow = '0 6px 0 ' + item.bg + '66';
+  document.getElementById('item-icone').className = 'fa-solid ' + item.icone;
+  document.getElementById('item-nome').textContent = item.nome;
+  document.getElementById('item-feedback').textContent = '';
+  document.getElementById('item-feedback').style.color = '';
+  document.getElementById('item-card').className = 'item-card';
+  setBinsDisabled(false);
+  ['bin-organico','bin-reciclavel','bin-lixo'].forEach(function(id) {
+    document.getElementById(id).classList.remove('destaque-certo');
+  });
+}
+
+function classificar(categoria) {
+  if (aguardando) return;
+  aguardando = true;
+  setBinsDisabled(true);
+  var item = itens[itemAtual];
+  var correto = categoria === item.categoria;
+  if (correto) {
+    acertos++;
+    document.getElementById('item-card').classList.add('correto');
+    document.getElementById('item-feedback').textContent = 'Correto!';
+    document.getElementById('item-feedback').style.color = '#2e7d32';
+    document.getElementById('bin-' + categoria).classList.add('destaque-certo');
+  } else {
+    document.getElementById('item-card').classList.add('errado');
+    document.getElementById('item-feedback').textContent = 'Era ' + item.categoria.charAt(0).toUpperCase() + item.categoria.slice(1) + '!';
+    document.getElementById('item-feedback').style.color = '#c62828';
+    document.getElementById('bin-' + item.categoria).classList.add('destaque-certo');
+  }
+  atualizarHUD();
+  setTimeout(function() {
+    itemAtual++;
+    aguardando = false;
+    carregarItem();
+    atualizarHUD();
+  }, 1400);
+}
+
+function setBinsDisabled(disabled) {
+  ['bin-organico','bin-reciclavel','bin-lixo'].forEach(function(id) {
+    document.getElementById(id).disabled = disabled;
+  });
+}
+
+function mostrarResultado() {
+  clearInterval(timerInterval);
+  mostrarTela('tela-resultado');
+  var vitoria = acertos >= 12;
+  var cor = vitoria ? '#2e7d32' : '#c62828';
+  document.getElementById('res-icone').innerHTML = '<div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,' + (vitoria?'#43a047,#66bb6a':'#e53935,#ef5350') + ');display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 6px 0 ' + (vitoria?'#2e7d32':'#b71c1c') + '"><i class="fa-solid ' + (vitoria?'fa-trophy':'fa-rotate') + '" style="color:#fff;font-size:34px"></i></div>';
+  document.getElementById('res-titulo').style.color = cor;
+  document.getElementById('res-titulo').textContent = vitoria ? 'Mestre da Reciclagem!' : 'Continue aprendendo!';
+  document.getElementById('res-sub').style.color = vitoria ? '#388e3c' : '#c62828';
+  document.getElementById('res-sub').textContent = vitoria ? 'Você ajudou o planeta!' : 'Pratique mais e salve a Terra!';
+  document.getElementById('res-score').style.color = cor;
+  var scoreEl = document.getElementById('res-score');
+  var obj = { v: 0 };
+  var iv = setInterval(function() {
+    obj.v = Math.min(obj.v + 1, acertos);
+    scoreEl.textContent = obj.v;
+    if (obj.v >= acertos) clearInterval(iv);
+  }, 50);
+  document.getElementById('res-detalhe').textContent = acertos + ' de 15 classificados corretamente';
+  if (vitoria) concederFolha();
+}
+
+function concederFolha() {
+  if (!window._supabase) return;
+  window._supabase.auth.getSession().then(function(r) {
+    var s = r.data && r.data.session;
+    if (!s) return;
+    var uid = s.user.id;
+    window._supabase.from('profiles').select('folhas').eq('user_id',uid).single().then(function(r2) {
+      if (r2.error || !r2.data) return;
+      var novas = (r2.data.folhas||0) + 1;
+      window._supabase.from('profiles').update({folhas:novas}).eq('user_id',uid).then(function(r3) {
+        if (!r3.error) mostrarToast('Folha conquistada! (total: ' + novas + ')');
+      });
+    });
+  });
+}
+
+function mostrarToast(msg) {
+  var el = document.getElementById('folha-toast');
+  document.getElementById('toast-txt').textContent = msg;
+  el.style.display = 'flex';
+  setTimeout(function() { el.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>

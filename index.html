@@ -153,7 +153,7 @@
     /* ── GAME CARDS ───────────────────────────────────── */
     .games-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 16px;
       margin-bottom: 32px;
     }
@@ -179,8 +179,11 @@
       justify-content: center;
       position: relative;
     }
-    .card-thumb.city { background: linear-gradient(135deg, #ff8f00, #ffca28); }
-    .card-thumb.soon { background: #f5f5f5; }
+    .card-thumb.city  { background: linear-gradient(135deg, #ff8f00, #ffca28); }
+    .card-thumb.ocean { background: linear-gradient(135deg, #0d47a1, #29b6f6); }
+    .card-thumb.quiz  { background: linear-gradient(135deg, #e65100, #ffd600); }
+    .card-thumb.eco   { background: linear-gradient(135deg, #1b5e20, #66bb6a); }
+    .card-thumb.soon  { background: #f5f5f5; }
 
     .card-thumb-icon {
       width: 56px; height: 56px;
@@ -560,27 +563,57 @@
         </div>
       </div>
 
-      <!-- Em breve 1 -->
-      <div class="game-card coming-soon">
-        <div class="card-thumb soon">
-          <div class="card-thumb-icon"><i class="fa-solid fa-tree"></i></div>
+      <!-- Oceano Limpo -->
+      <div class="game-card"
+           onclick="window.location.href='games/oceano-limpo/index.html'">
+        <div class="card-thumb ocean">
+          <div class="card-thumb-icon"><i class="fa-solid fa-ship"></i></div>
+          <div class="card-badge">Disponivel</div>
         </div>
         <div class="card-body">
-          <div class="card-title muted">Em breve...</div>
-          <div class="card-sub muted">Novo jogo · ODS ???</div>
-          <div class="btn-soon"><i class="fa-solid fa-clock"></i> Em desenvolvimento</div>
+          <div class="card-title">Oceano Limpo</div>
+          <div class="card-sub">Colete lixo no mar · ODS 14</div>
+          <button class="btn-play"
+                  onclick="event.stopPropagation();
+                           window.location.href='games/oceano-limpo/index.html'">
+            <i class="fa-solid fa-play"></i> Jogar Agora!
+          </button>
         </div>
       </div>
 
-      <!-- Em breve 2 -->
-      <div class="game-card coming-soon">
-        <div class="card-thumb soon">
-          <div class="card-thumb-icon"><i class="fa-solid fa-water"></i></div>
+      <!-- Quiz do Clima -->
+      <div class="game-card"
+           onclick="window.location.href='games/quiz-do-clima/index.html'">
+        <div class="card-thumb quiz">
+          <div class="card-thumb-icon"><i class="fa-solid fa-circle-question"></i></div>
+          <div class="card-badge">Disponivel</div>
         </div>
         <div class="card-body">
-          <div class="card-title muted">Em breve...</div>
-          <div class="card-sub muted">Novo jogo · ODS ???</div>
-          <div class="btn-soon"><i class="fa-solid fa-clock"></i> Em desenvolvimento</div>
+          <div class="card-title">Quiz do Clima</div>
+          <div class="card-sub">Perguntas sobre o clima · ODS 13</div>
+          <button class="btn-play"
+                  onclick="event.stopPropagation();
+                           window.location.href='games/quiz-do-clima/index.html'">
+            <i class="fa-solid fa-play"></i> Jogar Agora!
+          </button>
+        </div>
+      </div>
+
+      <!-- Reciclador -->
+      <div class="game-card"
+           onclick="window.location.href='games/reciclador/index.html'">
+        <div class="card-thumb eco">
+          <div class="card-thumb-icon"><i class="fa-solid fa-recycle"></i></div>
+          <div class="card-badge">Disponivel</div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Reciclador</div>
+          <div class="card-sub">Separe o lixo certo · ODS 12</div>
+          <button class="btn-play"
+                  onclick="event.stopPropagation();
+                           window.location.href='games/reciclador/index.html'">
+            <i class="fa-solid fa-play"></i> Jogar Agora!
+          </button>
         </div>
       </div>
 
@@ -591,11 +624,11 @@
     </div>
 
     <div class="ods-block">
-      <div class="ods-icon-wrap"><i class="fa-solid fa-temperature-arrow-up"></i></div>
+      <div class="ods-icon-wrap"><i class="fa-solid fa-earth-americas"></i></div>
       <div>
-        <div class="ods-text-title">ODS 13 — Ação Climática</div>
+        <div class="ods-text-title">ODS 12, 13 e 14 — Agenda 2030</div>
         <div class="ods-text-body">
-          O planeta precisa de heróis! No EcoPlanet, cada jogo ensina decisões reais que afetam o clima. Aprenda jogando e mude o mundo pensando!
+          O planeta precisa de herois! No EcoPlanet, cada jogo ensina decisoes reais sobre clima, oceanos e reciclagem. Aprenda jogando e mude o mundo pensando!
         </div>
       </div>
     </div>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz do Clima | EcoPlanet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Nunito', Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #1565c0 0%, #29b6f6 55%, #b3e5fc 100%);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 20px;
+    }
+    #btn-hub {
+      position: fixed; top: 12px; left: 12px; z-index: 9999;
+      background: #fff; border: none; color: #2e7d32;
+      font-family: 'Nunito', Arial, sans-serif; font-size: 13px; font-weight: 800;
+      padding: 7px 16px; border-radius: 50px; cursor: pointer;
+      box-shadow: 0 4px 0 #00000020; display: flex; align-items: center; gap: 6px;
+      transition: transform 0.1s;
+    }
+    #btn-hub:hover { transform: translateY(-1px); }
+    /* Auth gate */
+    #auth-gate {
+      position: fixed; inset: 0; background: rgba(0,50,10,0.60);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000; backdrop-filter: blur(4px);
+    }
+    .gate-card {
+      background: #fff; border: 2px solid #a5d6a7; border-radius: 24px;
+      padding: 40px 44px; max-width: 380px; width: 90%; text-align: center;
+      box-shadow: 0 10px 0 #2e7d3255;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    .gate-icon { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg,#43a047,#66bb6a); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 0 #2e7d32; }
+    .gate-icon i { color: #fff; font-size: 30px; }
+    .gate-title { font-size: 22px; font-weight: 900; color: #2e7d32; }
+    .gate-sub { font-size: 14px; font-weight: 700; color: #558b2f; line-height: 1.6; }
+    .gate-btn { background: linear-gradient(180deg,#66bb6a,#43a047); border: none; border-radius: 50px; padding: 12px 32px; font-family: 'Nunito',Arial,sans-serif; font-size: 15px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 5px 0 #2e7d32; transition: transform 0.1s; }
+    .gate-btn:hover { transform: translateY(-2px); }
+    /* Telas */
+    .tela { width: 100%; max-width: 680px; display: flex; flex-direction: column; align-items: center; }
+    /* Início */
+    .start-card { background: #fff; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 8px 0 #0d47a155; margin-top: 60px; width: 100%; }
+    .start-icon { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg,#1565c0,#29b6f6); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 6px 0 #0d47a1; }
+    .start-icon i { color: #fff; font-size: 32px; }
+    .info-box { background: #e3f2fd; border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: left; }
+    .info-box-titulo { font-size: 13px; font-weight: 900; color: #1565c0; margin-bottom: 8px; }
+    .info-box p { font-size: 13px; color: #1976d2; font-weight: 700; line-height: 1.9; }
+    /* Quiz */
+    .quiz-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px; color: #fff; }
+    .quiz-progresso { font-size: 14px; font-weight: 800; }
+    .quiz-pontos { font-size: 14px; font-weight: 800; }
+    .dots { display: flex; gap: 6px; margin-bottom: 10px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: all 0.2s; }
+    .dot.atual { background: #ffd600; transform: scale(1.35); }
+    .dot.feito { background: #fff; }
+    .timer-wrap { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 50px; margin-bottom: 14px; overflow: hidden; }
+    .timer-bar { height: 100%; background: #ffd600; border-radius: 50px; transition: width 1s linear, background 0.5s; }
+    .pergunta-card { background: #fff; border-radius: 20px; padding: 24px 28px; width: 100%; box-shadow: 0 8px 0 #0d47a133; margin-bottom: 14px; }
+    .pergunta-numero { font-size: 11px; font-weight: 900; color: #1565c0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .pergunta-texto { font-size: 19px; font-weight: 900; color: #1a237e; line-height: 1.4; }
+    .opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+    .opcao-btn {
+      background: #fff; border: 2px solid #bbdefb; border-radius: 14px;
+      padding: 12px 14px; font-family: 'Nunito',Arial,sans-serif;
+      font-size: 13px; font-weight: 800; color: #1565c0;
+      cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px;
+      transition: background 0.12s, border-color 0.12s, transform 0.1s;
+      box-shadow: 0 3px 0 #bbdefb;
+    }
+    .opcao-btn:hover:not(:disabled) { background: #e3f2fd; border-color: #1565c0; transform: translateY(-1px); }
+    .opcao-btn .letra { width: 26px; height: 26px; border-radius: 50%; background: #1565c0; color: #fff; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .opcao-btn.correta { background: #e8f5e9; border-color: #43a047; color: #2e7d32; box-shadow: 0 3px 0 #a5d6a7; }
+    .opcao-btn.correta .letra { background: #43a047; }
+    .opcao-btn.errada { background: #ffebee; border-color: #e53935; color: #b71c1c; box-shadow: 0 3px 0 #ef9a9a; }
+    .opcao-btn.errada .letra { background: #e53935; }
+    .opcao-btn:disabled { cursor: default; transform: none; }
+    /* Resultado */
+    .resultado-card { background: #fff; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 8px 0 #0d47a155; margin-top: 60px; width: 100%; }
+    .score-box { background: #f1f8e9; border-radius: 20px; padding: 24px; margin-bottom: 24px; }
+    /* Botões */
+    .btn-jogo { background: linear-gradient(180deg,#66bb6a,#43a047); border: none; border-radius: 50px; padding: 13px 32px; font-family: 'Nunito',Arial,sans-serif; font-size: 15px; font-weight: 900; color: #fff; cursor: pointer; box-shadow: 0 5px 0 #2e7d32; transition: transform 0.1s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-jogo:hover { transform: translateY(-2px); }
+    .btn-jogo:active { transform: translateY(2px); box-shadow: 0 2px 0 #2e7d32; }
+    .btn-jogo.azul { background: linear-gradient(180deg,#42a5f5,#1565c0); box-shadow: 0 5px 0 #0d47a1; }
+    .btn-jogo.azul:active { box-shadow: 0 2px 0 #0d47a1; }
+    /* Toast */
+    #folha-toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #43a047; color: #fff; font-family: 'Nunito',Arial,sans-serif; font-size: 15px; font-weight: 900; padding: 14px 28px; border-radius: 50px; box-shadow: 0 6px 0 #2e7d32; display: none; z-index: 9000; align-items: center; gap: 10px; white-space: nowrap; }
+    /* Spacer */
+    .spacer { height: 60px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div id="btn-hub" onclick="window.location.href='../../index.html'">
+  <i class="fa-solid fa-arrow-left"></i> EcoPlanet
+</div>
+
+<div id="auth-gate">
+  <div class="gate-card">
+    <div class="gate-icon"><i class="fa-solid fa-lock"></i></div>
+    <div class="gate-title">Login necessário!</div>
+    <div class="gate-sub">Você precisa estar logado para jogar.</div>
+    <button class="gate-btn" onclick="window.location.href='../../index.html'">
+      <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Fazer Login
+    </button>
+  </div>
+</div>
+
+<div id="folha-toast"><i class="fa-solid fa-leaf"></i> <span id="toast-txt">Folha conquistada!</span></div>
+
+<!-- ── Tela Início ── -->
+<div id="tela-inicio" class="tela">
+  <div class="spacer"></div>
+  <div class="start-card">
+    <div class="start-icon"><i class="fa-solid fa-circle-question"></i></div>
+    <div style="font-size:26px;font-weight:900;color:#1a237e;margin-bottom:6px">Quiz do Clima</div>
+    <div style="font-size:14px;font-weight:700;color:#1565c0;margin-bottom:22px">Teste seus conhecimentos sobre clima e meio ambiente!</div>
+    <div class="info-box">
+      <div class="info-box-titulo"><i class="fa-solid fa-circle-info"></i> Como jogar</div>
+      <p>
+        10 perguntas · 20 segundos cada<br>
+        Clique na resposta certa<br>
+        Acerte 7 ou mais e ganhe uma Folha
+      </p>
+    </div>
+    <button class="btn-jogo" onclick="iniciarQuiz()">
+      <i class="fa-solid fa-play"></i> Começar!
+    </button>
+  </div>
+</div>
+
+<!-- ── Tela Quiz ── -->
+<div id="tela-quiz" class="tela" style="display:none">
+  <div class="spacer"></div>
+  <div class="quiz-header">
+    <div class="quiz-progresso" id="txt-progresso">Pergunta 1 de 10</div>
+    <div class="quiz-pontos"><i class="fa-solid fa-star" style="color:#ffd600"></i> <span id="txt-pontos">0</span> pts</div>
+  </div>
+  <div class="dots" id="dots-progresso"></div>
+  <div class="timer-wrap"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+  <div class="pergunta-card">
+    <div class="pergunta-numero" id="txt-numero">PERGUNTA 1</div>
+    <div class="pergunta-texto" id="txt-pergunta"></div>
+  </div>
+  <div class="opcoes" id="opcoes-grid"></div>
+</div>
+
+<!-- ── Tela Resultado ── -->
+<div id="tela-resultado" class="tela" style="display:none">
+  <div class="spacer"></div>
+  <div class="resultado-card">
+    <div id="res-icone" style="margin-bottom:16px"></div>
+    <div id="res-titulo" style="font-size:26px;font-weight:900;margin-bottom:6px"></div>
+    <div id="res-sub" style="font-size:14px;font-weight:700;color:#558b2f;margin-bottom:22px"></div>
+    <div class="score-box">
+      <div style="font-size:12px;font-weight:900;color:#558b2f;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">Pontuação</div>
+      <div id="res-score" style="font-size:54px;font-weight:900;color:#2e7d32">0</div>
+      <div id="res-acertos" style="font-size:14px;font-weight:700;color:#558b2f"></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-jogo" onclick="iniciarQuiz()"><i class="fa-solid fa-rotate"></i> Jogar de novo</button>
+      <button class="btn-jogo azul" onclick="window.location.href='../../index.html'"><i class="fa-solid fa-house"></i> Hub</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../auth/supabase.js"></script>
+<script>
+// Auth gate
+(function () {
+  if (!window._supabase) { document.getElementById('auth-gate').style.display = 'none'; return; }
+  window._supabase.auth.getSession().then(function (r) {
+    if (r.data && r.data.session) document.getElementById('auth-gate').style.display = 'none';
+  }).catch(function () { document.getElementById('auth-gate').style.display = 'none'; });
+})();
+
+// ── Perguntas ────────────────────────────────────────────────────────────────
+var PERGUNTAS_BASE = [
+  { texto: "O que faz a temperatura da Terra aumentar?", opcoes: ["Gases que prendem calor na atmosfera", "O Sol ficando cada vez maior", "Mais chuvas nos oceanos", "Terremotos frequentes"], correta: 0 },
+  { texto: "Qual gás é o principal responsável pelo aquecimento global?", opcoes: ["Oxigênio", "Nitrogênio", "Dióxido de carbono (CO₂)", "Vapor d'água"], correta: 2 },
+  { texto: "O que é energia renovável?", opcoes: ["Energia que dura só 1 ano", "Energia do petróleo", "Energia que vem do sol, vento ou água", "Energia de pilhas descartáveis"], correta: 2 },
+  { texto: "O que ajuda a REDUZIR o CO₂ na atmosfera?", opcoes: ["Queimar mais combustível", "Plantar mais árvores", "Construir mais fábricas", "Usar mais plástico descartável"], correta: 1 },
+  { texto: "O que significa ODS 13?", opcoes: ["Fim da Pobreza", "Vida na Água", "Ação Contra a Mudança Global do Clima", "Educação de Qualidade"], correta: 2 },
+  { texto: "O que acontece quando o gelo dos polos derrete?", opcoes: ["O nível dos oceanos sobe", "Fica mais fácil pescar", "O ar fica mais fresco", "As nuvens desaparecem"], correta: 0 },
+  { texto: "Qual transporte emite MENOS poluição?", opcoes: ["Avião", "Carro a gasolina", "Bicicleta", "Caminhão a diesel"], correta: 2 },
+  { texto: "O que é o Acordo de Paris?", opcoes: ["Uma competição esportiva", "Acordo global para limitar o aquecimento", "Um tipo de energia limpa", "Um parque ecológico famoso"], correta: 1 },
+  { texto: "Qual atitude ajuda o meio ambiente?", opcoes: ["Deixar luzes acesas o dia todo", "Jogar lixo no rio", "Usar menos água e energia", "Comprar itens descartáveis sempre"], correta: 2 },
+  { texto: "O que é a Agenda 2030 da ONU?", opcoes: ["Um calendário de feriados", "Plano global por um mundo mais sustentável", "Um programa de televisão", "Uma lista de países ricos"], correta: 1 }
+];
+var LETRAS = ['A','B','C','D'];
+
+var PERGUNTAS = [];
+var questaoAtual = 0;
+var pontuacao = 0;
+var acertos = 0;
+var timerInterval = null;
+var tempoRestante = 20;
+var respondido = false;
+
+function mostrarTela(id) {
+  ['tela-inicio','tela-quiz','tela-resultado'].forEach(function(t) {
+    document.getElementById(t).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'flex';
+}
+
+function embaralhar(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function iniciarQuiz() {
+  questaoAtual = 0; pontuacao = 0; acertos = 0;
+  PERGUNTAS = embaralhar(PERGUNTAS_BASE);
+  mostrarTela('tela-quiz');
+  construirDots();
+  carregarQuestao();
+}
+
+function construirDots() {
+  var el = document.getElementById('dots-progresso');
+  el.innerHTML = '';
+  for (var i = 0; i < PERGUNTAS.length; i++) {
+    var d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' atual' : '');
+    d.id = 'dot-' + i;
+    el.appendChild(d);
+  }
+}
+
+function carregarQuestao() {
+  respondido = false;
+  var q = PERGUNTAS[questaoAtual];
+  document.getElementById('txt-progresso').textContent = 'Pergunta ' + (questaoAtual+1) + ' de ' + PERGUNTAS.length;
+  document.getElementById('txt-numero').textContent = 'PERGUNTA ' + (questaoAtual+1);
+  document.getElementById('txt-pergunta').textContent = q.texto;
+  document.getElementById('txt-pontos').textContent = pontuacao;
+  for (var i = 0; i < PERGUNTAS.length; i++) {
+    var d = document.getElementById('dot-'+i);
+    if (d) d.className = 'dot' + (i === questaoAtual ? ' atual' : (i < questaoAtual ? ' feito' : ''));
+  }
+  var grid = document.getElementById('opcoes-grid');
+  grid.innerHTML = '';
+  for (var j = 0; j < q.opcoes.length; j++) {
+    (function(idx) {
+      var btn = document.createElement('button');
+      btn.className = 'opcao-btn';
+      btn.id = 'opcao-' + idx;
+      btn.innerHTML = '<span class="letra">' + LETRAS[idx] + '</span>' + q.opcoes[idx];
+      btn.onclick = function() { responder(idx); };
+      grid.appendChild(btn);
+    })(j);
+  }
+  iniciarTimer();
+}
+
+function iniciarTimer() {
+  tempoRestante = 20;
+  atualizarTimerBar();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    tempoRestante--;
+    atualizarTimerBar();
+    if (tempoRestante <= 0) { clearInterval(timerInterval); responder(-1); }
+  }, 1000);
+}
+
+function atualizarTimerBar() {
+  var pct = (tempoRestante / 20) * 100;
+  var bar = document.getElementById('timer-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = tempoRestante > 10 ? '#ffd600' : (tempoRestante > 5 ? '#ff9800' : '#e53935');
+}
+
+function responder(idx) {
+  if (respondido) return;
+  respondido = true;
+  clearInterval(timerInterval);
+  var q = PERGUNTAS[questaoAtual];
+  for (var i = 0; i < q.opcoes.length; i++) {
+    var btn = document.getElementById('opcao-'+i);
+    btn.disabled = true;
+    if (i === q.correta) btn.classList.add('correta');
+    else if (i === idx) btn.classList.add('errada');
+  }
+  if (idx === q.correta) { pontuacao += 10; acertos++; }
+  document.getElementById('txt-pontos').textContent = pontuacao;
+  setTimeout(function() {
+    questaoAtual++;
+    if (questaoAtual < PERGUNTAS.length) carregarQuestao();
+    else mostrarResultado();
+  }, 1800);
+}
+
+function mostrarResultado() {
+  mostrarTela('tela-resultado');
+  var vitoria = acertos >= 7;
+  var cor = vitoria ? '#2e7d32' : '#c62828';
+  var iconeEl = document.getElementById('res-icone');
+  iconeEl.innerHTML = '<div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,' + (vitoria?'#43a047,#66bb6a':'#e53935,#ef5350') + ');display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 6px 0 ' + (vitoria?'#2e7d32':'#b71c1c') + '"><i class="fa-solid ' + (vitoria?'fa-trophy':'fa-rotate') + '" style="color:#fff;font-size:34px"></i></div>';
+  document.getElementById('res-titulo').style.color = cor;
+  document.getElementById('res-titulo').textContent = vitoria ? 'Parabéns, herói do clima!' : 'Continue tentando!';
+  document.getElementById('res-sub').textContent = vitoria ? 'Você é um defensor do planeta!' : 'Aprenda mais e tente de novo!';
+  document.getElementById('res-score').style.color = cor;
+  var scoreEl = document.getElementById('res-score');
+  var obj = { v: 0 }; var target = pontuacao;
+  var iv = setInterval(function() {
+    obj.v = Math.min(obj.v + 4, target);
+    scoreEl.textContent = obj.v;
+    if (obj.v >= target) clearInterval(iv);
+  }, 25);
+  document.getElementById('res-acertos').textContent = acertos + ' de 10 corretas';
+  if (vitoria) concederFolha();
+}
+
+function concederFolha() {
+  if (!window._supabase) return;
+  window._supabase.auth.getSession().then(function(r) {
+    var s = r.data && r.data.session;
+    if (!s) return;
+    var uid = s.user.id;
+    window._supabase.from('profiles').select('folhas').eq('user_id',uid).single().then(function(r2) {
+      if (r2.error || !r2.data) return;
+      var novas = (r2.data.folhas || 0) + 1;
+      window._supabase.from('profiles').update({folhas:novas}).eq('user_id',uid).then(function(r3) {
+        if (!r3.error) mostrarToast('Folha conquistada! (total: ' + novas + ')');
+      });
+    });
+  });
+}
+
+function mostrarToast(msg) {
+  var el = document.getElementById('folha-toast');
+  document.getElementById('toast-txt').textContent = msg;
+  el.style.display = 'flex';
+  setTimeout(function() { el.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>
