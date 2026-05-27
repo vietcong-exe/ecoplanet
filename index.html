@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EcoPlanet — Jogos pelo Clima</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #111d11;
-      color: #e8f5e9;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Nunito', 'Arial Rounded MT Bold', Arial, sans-serif;
+      background: #f1f8e9;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -19,298 +19,370 @@
 
     /* ── HERO ─────────────────────────────────────────── */
     .hero {
-      background: linear-gradient(180deg, #0d1a0d 0%, #1a2a1a 100%);
-      padding: 40px 60px 32px;
-      border-bottom: 1px solid #2d4a2d;
+      background: linear-gradient(180deg, #29b6f6 0%, #81d4fa 60%, #b3e5fc 100%);
+      padding: 0;
       position: relative;
       overflow: hidden;
+      min-height: 220px;
     }
 
-    .hero::after {
+    /* nuvens CSS */
+    .cloud {
+      position: absolute;
+      background: #fff;
+      border-radius: 50px;
+      opacity: 0.85;
+    }
+    .cloud::before, .cloud::after {
       content: '';
       position: absolute;
-      right: 80px;
-      top: 0; bottom: 0;
-      width: 300px;
-      background: radial-gradient(ellipse at center, rgba(39,174,96,0.08) 0%, transparent 70%);
-      pointer-events: none;
+      background: #fff;
+      border-radius: 50%;
+    }
+    .cloud-1 { width: 100px; height: 30px; top: 30px; left: 60px; }
+    .cloud-1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+    .cloud-1::after  { width: 35px; height: 35px; top: -18px; left: 45px; }
+    .cloud-2 { width: 70px; height: 22px; top: 20px; right: 120px; }
+    .cloud-2::before { width: 35px; height: 35px; top: -18px; left: 10px; }
+    .cloud-2::after  { width: 25px; height: 25px; top: -12px; left: 35px; }
+    .cloud-3 { width: 85px; height: 26px; top: 55px; right: 260px; opacity: 0.6; }
+    .cloud-3::before { width: 42px; height: 42px; top: -21px; left: 12px; }
+    .cloud-3::after  { width: 30px; height: 30px; top: -15px; left: 42px; }
+
+    /* sol CSS */
+    .sun {
+      position: absolute;
+      top: 18px; right: 40px;
+      width: 60px; height: 60px;
+      background: #ffd600;
+      border-radius: 50%;
+      box-shadow: 0 0 0 8px #ffd60033, 0 0 0 16px #ffd60018;
+    }
+
+    /* grama */
+    .grass {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 48px;
+      background: #4caf50;
+      border-radius: 60% 60% 0 0 / 30px 30px 0 0;
+    }
+    .grass::before {
+      content: '';
+      position: absolute;
+      bottom: 100%; left: 0; right: 0;
+      height: 18px;
+      background: #66bb6a;
+      border-radius: 60% 60% 0 0 / 18px 18px 0 0;
+    }
+
+    /* nav dentro do hero */
+    .nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px 0;
     }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 10px;
+      gap: 10px;
+      background: #fff;
+      border-radius: 50px;
+      padding: 8px 18px 8px 10px;
+      box-shadow: 0 4px 0 #00000018;
     }
-
     .logo-icon {
-      width: 40px; height: 40px;
+      width: 36px; height: 36px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #27ae60, #e67e22);
+      background: linear-gradient(135deg, #43a047, #66bb6a);
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      box-shadow: 0 3px 0 #2e7d3244;
     }
+    .logo-icon i { color: #fff; font-size: 17px; }
+    .logo-name { font-size: 18px; font-weight: 900; color: #2e7d32; }
 
-    .logo-icon-inner {
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: #0d1a0d;
+    /* headline no hero */
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 18px 20px 70px;
     }
-
-    .logo-name {
-      font-size: 28px; font-weight: 700;
-      color: #e8f5e9;
-      letter-spacing: 1px;
+    .hero-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 3px 0 #00000022;
+      line-height: 1.2;
+      margin-bottom: 6px;
     }
-
-    .tagline {
-      color: #81c784;
-      font-size: 14px; font-style: italic;
-      margin-left: 54px; margin-bottom: 24px;
-    }
-
-    .stats {
-      display: flex; gap: 32px;
-      margin-left: 54px;
-    }
-
-    .stat-value {
-      font-size: 22px; font-weight: 700;
-      color: #27ae60; line-height: 1;
-    }
-
-    .stat-value.orange { color: #e67e22; }
-
-    .stat-label {
-      font-size: 10px; color: #5a8a5a;
-      text-transform: uppercase; letter-spacing: 1.5px;
-      margin-top: 4px;
+    .hero-title span { color: #ffd600; }
+    .hero-sub {
+      font-size: 14px;
+      color: #e3f2fd;
+      font-weight: 700;
     }
 
     /* ── MAIN ─────────────────────────────────────────── */
     .main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 40px;
       flex: 1;
+      background: #f1f8e9;
+      padding: 28px 24px;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
     }
 
-    .section-label {
-      font-size: 10px; color: #5a8a5a;
-      text-transform: uppercase; letter-spacing: 2px;
+    .section-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: #558b2f;
+      text-transform: uppercase;
+      letter-spacing: 2px;
       margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+    .section-title i { color: #8bc34a; }
 
-    /* ── GAMES GRID ───────────────────────────────────── */
+    /* ── GAME CARDS ───────────────────────────────────── */
     .games-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      margin-bottom: 48px;
+      gap: 16px;
+      margin-bottom: 32px;
     }
 
     .game-card {
-      background: #1e3a1e;
-      border: 1px solid #2d6a3a;
-      border-radius: 10px;
+      background: #fff;
+      border-radius: 20px;
       overflow: hidden;
+      box-shadow: 0 6px 0 #c8e6c9, 0 8px 16px #00000012;
+      transition: transform 0.15s;
       cursor: pointer;
-      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
-
-    .game-card:hover {
-      border-color: #27ae60;
-      box-shadow: 0 4px 20px rgba(39,174,96,0.2);
-      transform: translateY(-2px);
-    }
-
+    .game-card:hover { transform: translateY(-4px); }
     .game-card.coming-soon {
-      opacity: 0.45;
       cursor: default;
       pointer-events: none;
     }
 
-    .card-thumbnail {
+    .card-thumb {
       height: 110px;
-      background: linear-gradient(135deg, #1e5631, #27ae60);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
     }
+    .card-thumb.city { background: linear-gradient(135deg, #ff8f00, #ffca28); }
+    .card-thumb.soon { background: #f5f5f5; }
 
-    .card-thumbnail .badge {
-      position: absolute; top: 8px; right: 10px;
-      background: #27ae60; color: #fff;
-      font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
-      padding: 3px 8px; border-radius: 10px;
-    }
-
-    .mini-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 16px);
-      gap: 3px;
-    }
-
-    .mini-tile { height: 16px; border-radius: 2px; }
-
-    .card-thumbnail.empty {
-      background: #1a2a1a;
-      border-bottom: 1px solid #2a3a2a;
-    }
-
-    .empty-icon {
-      width: 38px; height: 38px;
-      border: 2px dashed #3a5a3a;
-      border-radius: 50%;
+    .card-thumb-icon {
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      background: #fff3;
       display: flex; align-items: center; justify-content: center;
-      color: #3a5a3a;
-      font-size: 20px; font-weight: bold;
+      box-shadow: 0 4px 0 #00000015;
+    }
+    .card-thumb-icon i { font-size: 28px; color: #fff; }
+    .card-thumb.soon .card-thumb-icon { background: #eee; box-shadow: none; }
+    .card-thumb.soon .card-thumb-icon i { color: #ccc; }
+
+    .card-badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: #43a047;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 3px 10px;
+      border-radius: 50px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .card-body { padding: 14px; }
-
     .card-title {
-      font-size: 13px; font-weight: 700;
-      color: #a9dfbf; margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #33691e;
+      margin-bottom: 3px;
     }
-
-    .card-title.muted { color: #3a5a3a; }
-
+    .card-title.muted { color: #bdbdbd; }
     .card-sub {
-      font-size: 10px; color: #5a8a5a;
-      margin-bottom: 12px;
+      font-size: 10px;
+      color: #a5d6a7;
+      font-weight: 700;
+      margin-bottom: 10px;
     }
-
-    .card-sub.muted { color: #2a4a2a; }
+    .card-sub.muted { color: #e0e0e0; }
 
     .btn-play {
-      display: block;
       width: 100%;
-      background: #27ae60; color: #fff;
-      font-size: 11px; font-weight: 700;
-      font-family: 'Inter', sans-serif;
-      text-align: center; letter-spacing: 0.5px;
-      padding: 8px; border-radius: 5px;
-      border: none; cursor: pointer;
-    }
-
-    .btn-play:hover { background: #2ecc71; }
-
-    .btn-coming {
-      display: block;
-      background: transparent;
-      border: 1px solid #2a3a2a;
-      color: #3a5a3a;
-      font-size: 10px; text-align: center;
-      padding: 7px; border-radius: 5px;
+      background: linear-gradient(180deg, #66bb6a, #43a047);
+      border: none;
+      border-radius: 50px;
+      padding: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #2e7d32;
+      text-transform: uppercase;
       letter-spacing: 0.5px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: transform 0.1s;
+    }
+    .btn-play:hover { transform: translateY(-2px); }
+    .btn-play:active { transform: translateY(2px); box-shadow: 0 2px 0 #2e7d32; }
+
+    .btn-soon {
+      width: 100%;
+      background: #f5f5f5;
+      border: 2px dashed #e0e0e0;
+      border-radius: 50px;
+      padding: 9px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      color: #bdbdbd;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
     }
 
     /* ── ODS BLOCK ────────────────────────────────────── */
     .ods-block {
-      background: #141f14;
-      border-left: 3px solid #e67e22;
+      background: #fff;
+      border-radius: 20px;
       padding: 20px 24px;
-      border-radius: 0 8px 8px 0;
+      box-shadow: 0 6px 0 #c8e6c9, 0 8px 16px #00000010;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 28px;
     }
-
-    .ods-title {
-      font-size: 11px; font-weight: 700;
-      color: #e67e22;
-      text-transform: uppercase; letter-spacing: 2px;
-      margin-bottom: 8px;
+    .ods-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ff8f00, #ffca28);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 0 #e65100;
     }
-
-    .ods-text {
-      font-size: 13px; color: #81c784;
-      line-height: 1.7;
+    .ods-icon-wrap i { color: #fff; font-size: 24px; }
+    .ods-text-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: #e65100;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .ods-text-body {
+      font-size: 13px;
+      color: #558b2f;
+      font-weight: 700;
+      line-height: 1.6;
     }
 
     /* ── FOOTER ───────────────────────────────────────── */
     footer {
-      background: #0d1a0d;
-      border-top: 1px solid #1a2a1a;
-      padding: 14px 40px;
+      background: #4caf50;
+      padding: 14px 28px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 40px;
     }
-
     footer span {
-      font-size: 10px; color: #2d4a2d;
-      letter-spacing: 0.5px;
+      font-size: 11px;
+      color: #e8f5e9;
+      font-weight: 700;
+      opacity: 0.9;
     }
 
     /* ── AUTH ZONE ────────────────────────────────────── */
     #auth-zone {
-      position: absolute;
-      top: 20px;
-      right: 40px;
+      position: relative;
       z-index: 10;
     }
 
     .btn-entrar {
-      background: transparent;
-      border: 1px solid #27ae60;
-      color: #27ae60;
-      font-family: 'Inter', sans-serif;
-      font-size: 12px; font-weight: 600;
-      padding: 7px 16px;
-      border-radius: 4px;
+      background: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 9px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      color: #1565c0;
       cursor: pointer;
-      letter-spacing: 0.5px;
-      transition: background 0.15s;
+      box-shadow: 0 4px 0 #00000018;
+      display: flex; align-items: center; gap: 7px;
+      transition: transform 0.1s;
     }
-
-    .btn-entrar:hover { background: #1a3a1a; }
+    .btn-entrar:hover { transform: translateY(-1px); }
+    .btn-entrar i { font-size: 13px; }
 
     .widget-perfil {
       display: flex;
       align-items: center;
       gap: 8px;
+      background: #fff;
+      border-radius: 50px;
+      padding: 6px 14px 6px 6px;
+      box-shadow: 0 4px 0 #00000018;
     }
 
     .avatar {
       width: 28px; height: 28px;
       border-radius: 50%;
-      background: #27ae60;
-      color: #0d1a0d;
-      font-size: 13px; font-weight: 700;
+      background: #43a047;
+      color: #fff;
+      font-size: 13px; font-weight: 900;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Nunito', sans-serif;
     }
 
     .nome-usuario {
-      font-size: 12px; color: #a9dfbf;
-      font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 800;
+      color: #33691e;
+      font-family: 'Nunito', sans-serif;
     }
 
     .folhas-count {
-      font-size: 11px; color: #27ae60;
-      font-family: 'Inter', sans-serif;
-      background: #1a3a1a;
-      border: 1px solid #2d6a3a;
+      font-size: 11px; font-weight: 800;
+      color: #2e7d32;
+      font-family: 'Nunito', sans-serif;
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
       padding: 3px 8px;
-      border-radius: 10px;
+      border-radius: 50px;
     }
 
     .btn-sair {
       background: transparent;
       border: none;
-      color: #5a8a5a;
-      font-size: 11px;
-      font-family: 'Inter', sans-serif;
+      color: #ef9a9a;
+      font-size: 11px; font-weight: 800;
+      font-family: 'Nunito', sans-serif;
       cursor: pointer;
       padding: 0;
+      transition: color 0.15s;
     }
-
-    .btn-sair:hover { color: #e74c3c; }
+    .btn-sair:hover { color: #e53935; }
 
     /* ── MODAL ────────────────────────────────────────── */
     #modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -318,86 +390,88 @@
     }
 
     .modal-card {
-      background: #0d1a0d;
-      border: 1px solid #2d6a3a;
-      border-radius: 10px;
+      background: #fff;
+      border: 2px solid #a5d6a7;
+      border-radius: 20px;
       padding: 32px 36px;
       width: 340px;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      box-shadow: 0 8px 32px #00000020;
     }
 
     .modal-titulo {
-      font-size: 20px; font-weight: 700;
-      color: #e8f5e9;
-      font-family: 'Inter', sans-serif;
+      font-size: 20px; font-weight: 900;
+      color: #2e7d32;
+      font-family: 'Nunito', sans-serif;
       text-align: center;
       margin-bottom: 4px;
     }
 
     .modal-abas {
       display: flex;
-      border-bottom: 1px solid #2d4a2d;
+      border-bottom: 2px solid #e8f5e9;
     }
 
     .aba {
       flex: 1;
       background: transparent;
       border: none;
-      border-bottom: 2px solid transparent;
-      color: #5a8a5a;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      border-bottom: 3px solid transparent;
+      color: #a5d6a7;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px; font-weight: 800;
       padding: 8px;
       cursor: pointer;
-      margin-bottom: -1px;
+      margin-bottom: -2px;
       transition: color 0.15s, border-color 0.15s;
     }
 
     .aba.ativa {
-      color: #27ae60;
-      border-bottom-color: #27ae60;
+      color: #43a047;
+      border-bottom-color: #43a047;
     }
 
     .campo {
       width: 100%;
-      background: #1a2a1a;
-      border: 1px solid #2d4a2d;
-      border-radius: 5px;
-      color: #e8f5e9;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      background: #f9fbe7;
+      border: 1px solid #c8e6c9;
+      border-radius: 10px;
+      color: #33691e;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px; font-weight: 700;
       padding: 10px 12px;
       outline: none;
       transition: border-color 0.15s;
       box-sizing: border-box;
     }
 
-    .campo:focus { border-color: #27ae60; }
+    .campo:focus { border-color: #43a047; }
 
     .btn-principal {
       width: 100%;
-      background: #27ae60;
+      background: #43a047;
       border: none;
-      border-radius: 5px;
+      border-radius: 50px;
       color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px; font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px; font-weight: 900;
       padding: 11px;
       cursor: pointer;
       letter-spacing: 0.5px;
-      transition: background 0.15s;
+      box-shadow: 0 4px 0 #2e7d32;
+      transition: transform 0.1s;
     }
-
-    .btn-principal:hover { background: #2ecc71; }
+    .btn-principal:hover { transform: translateY(-1px); }
+    .btn-principal:active { transform: translateY(2px); box-shadow: 0 2px 0 #2e7d32; }
 
     .modal-separador {
       text-align: center;
       position: relative;
-      color: #3a5a3a;
-      font-size: 11px;
-      font-family: 'Inter', sans-serif;
+      color: #a5d6a7;
+      font-size: 11px; font-weight: 800;
+      font-family: 'Nunito', sans-serif;
     }
 
     .modal-separador::before,
@@ -407,7 +481,7 @@
       top: 50%;
       width: 40%;
       height: 1px;
-      background: #2d4a2d;
+      background: #c8e6c9;
     }
 
     .modal-separador::before { left: 0; }
@@ -415,23 +489,22 @@
 
     .btn-google {
       width: 100%;
-      background: #1a2a1a;
-      border: 1px solid #2d4a2d;
-      border-radius: 5px;
-      color: #a9dfbf;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      color: #555;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px; font-weight: 700;
       padding: 10px;
       cursor: pointer;
       transition: border-color 0.15s;
     }
-
-    .btn-google:hover { border-color: #27ae60; }
+    .btn-google:hover { border-color: #43a047; }
 
     .modal-erro {
-      font-size: 12px;
-      color: #e74c3c;
-      font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 800;
+      color: #e53935;
+      font-family: 'Nunito', sans-serif;
       min-height: 16px;
       text-align: center;
     }
@@ -439,49 +512,42 @@
 </head>
 <body>
 
-  <!-- HERO -->
+  <!-- HERO: céu com nuvens e sol -->
   <header class="hero">
-    <div class="logo">
-      <div class="logo-icon"><div class="logo-icon-inner"></div></div>
-      <span class="logo-name">EcoPlanet</span>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="sun"></div>
+    <div class="grass"></div>
+
+    <nav class="nav">
+      <div class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-earth-americas"></i></div>
+        <span class="logo-name">EcoPlanet</span>
+      </div>
+      <div id="auth-zone"></div>
+    </nav>
+
+    <div class="hero-content">
+      <div class="hero-title">Jogue e <span>salve o planeta!</span></div>
+      <div class="hero-sub">Aprenda sobre o clima de um jeito divertido</div>
     </div>
-    <p class="tagline">Jogos que conscientizam. Planeta que agradece.</p>
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-value">1</div>
-        <div class="stat-label">Jogo disponível</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value orange">ODS 13</div>
-        <div class="stat-label">Em foco</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">2026</div>
-        <div class="stat-label">Lançamento</div>
-      </div>
-    </div>
-    <div id="auth-zone"></div>
   </header>
 
   <main class="main">
 
-    <div class="section-label">Jogos</div>
+    <div class="section-title">
+      <i class="fa-solid fa-gamepad"></i> Jogos
+    </div>
 
     <div class="games-grid">
 
       <!-- Cidade Sustentável 2050 -->
       <div class="game-card"
            onclick="window.location.href='games/cidade-sustentavel-2050/index.html'">
-        <div class="card-thumbnail">
-          <div class="mini-grid">
-            <div class="mini-tile" style="background:#e74c3c"></div>
-            <div class="mini-tile" style="background:#2980b9"></div>
-            <div class="mini-tile" style="background:#27ae60"></div>
-            <div class="mini-tile" style="background:#f39c12"></div>
-            <div class="mini-tile" style="background:#27ae60"></div>
-            <div class="mini-tile" style="background:#27ae60"></div>
-          </div>
-          <div class="badge">DISPONÍVEL</div>
+        <div class="card-thumb city">
+          <div class="card-thumb-icon"><i class="fa-solid fa-city"></i></div>
+          <div class="card-badge">Disponível</div>
         </div>
         <div class="card-body">
           <div class="card-title">Cidade Sustentável 2050</div>
@@ -489,46 +555,49 @@
           <button class="btn-play"
                   onclick="event.stopPropagation();
                            window.location.href='games/cidade-sustentavel-2050/index.html'">
-            JOGAR AGORA
+            <i class="fa-solid fa-play"></i> Jogar Agora!
           </button>
         </div>
       </div>
 
       <!-- Em breve 1 -->
       <div class="game-card coming-soon">
-        <div class="card-thumbnail empty">
-          <div class="empty-icon">?</div>
+        <div class="card-thumb soon">
+          <div class="card-thumb-icon"><i class="fa-solid fa-tree"></i></div>
         </div>
         <div class="card-body">
           <div class="card-title muted">Em breve...</div>
           <div class="card-sub muted">Novo jogo · ODS ???</div>
-          <div class="btn-coming">EM DESENVOLVIMENTO</div>
+          <div class="btn-soon"><i class="fa-solid fa-clock"></i> Em desenvolvimento</div>
         </div>
       </div>
 
       <!-- Em breve 2 -->
       <div class="game-card coming-soon">
-        <div class="card-thumbnail empty">
-          <div class="empty-icon">?</div>
+        <div class="card-thumb soon">
+          <div class="card-thumb-icon"><i class="fa-solid fa-water"></i></div>
         </div>
         <div class="card-body">
           <div class="card-title muted">Em breve...</div>
           <div class="card-sub muted">Novo jogo · ODS ???</div>
-          <div class="btn-coming">EM DESENVOLVIMENTO</div>
+          <div class="btn-soon"><i class="fa-solid fa-clock"></i> Em desenvolvimento</div>
         </div>
       </div>
 
     </div>
 
-    <div class="section-label">Por que isso importa</div>
+    <div class="section-title">
+      <i class="fa-solid fa-circle-info"></i> Por que isso importa?
+    </div>
+
     <div class="ods-block">
-      <div class="ods-title">ODS 13 — Ação Climática</div>
-      <p class="ods-text">
-        O Objetivo de Desenvolvimento Sustentável 13 da ONU exige ação urgente para
-        combater as mudanças climáticas e seus impactos. No EcoPlanet, cada jogo simula
-        decisões reais que afetam o planeta — do gerenciamento de cidades à preservação
-        de ecossistemas. Aprenda jogando. Mude o mundo pensando.
-      </p>
+      <div class="ods-icon-wrap"><i class="fa-solid fa-temperature-arrow-up"></i></div>
+      <div>
+        <div class="ods-text-title">ODS 13 — Ação Climática</div>
+        <div class="ods-text-body">
+          O planeta precisa de heróis! No EcoPlanet, cada jogo ensina decisões reais que afetam o clima. Aprenda jogando e mude o mundo pensando!
+        </div>
+      </div>
     </div>
 
   </main>
